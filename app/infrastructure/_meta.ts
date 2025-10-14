@@ -1,3 +1,4 @@
 export default {
-  'proxmox-install': 'Installing Proxmox VE'
+  'proxmox-install': 'Proxmox - Installation',
+  'proxmox-post-install': 'Proxmox - Post-Install Script'
 }
