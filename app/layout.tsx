@@ -4,18 +4,34 @@ import { getPageMap } from 'nextra/page-map'
 import 'nextra-theme-docs/style.css'
  
 export const metadata = {
-  // Define your metadata here
-  // For more information on metadata API, see: https://nextjs.org/docs/app/building-your-application/optimizing/metadata
+  title: {
+    default: 'LocalHake Docs',
+    template: '%s | LocalHake Docs'
+  },
+  description: 'Documentation for LocalHake projects and tutorials',
+  metadataBase: new URL('https://docs.localhake.com')
 }
  
-const banner = <Banner storageKey="some-key">Nextra 4.0 is released 🎉</Banner>
+const banner = (
+  <Banner storageKey="youtube-banner-dismissed">
+    Subscribe to my YouTube Channel:{' '}
+    <a
+      href="https://www.youtube.com/@hakehardware"
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{ textDecoration: 'underline' }}
+    >
+      @hakehardware
+    </a>
+  </Banner>
+)
 const navbar = (
   <Navbar
-    logo={<b>Nextra</b>}
+    logo={<b>LocalHake</b>}
     // ... Your additional navbar options
   />
 )
-const footer = <Footer>MIT {new Date().getFullYear()} © Nextra.</Footer>
+const footer = <Footer>© {new Date().getFullYear()} LocalHake</Footer>
  
 export default async function RootLayout({
   children
@@ -41,7 +57,7 @@ export default async function RootLayout({
           banner={banner}
           navbar={navbar}
           pageMap={await getPageMap()}
-          docsRepositoryBase="https://github.com/shuding/nextra/tree/main/docs"
+          docsRepositoryBase="https://github.com/hakehardware/nextra-doc/tree/main"
           footer={footer}
           // ... Your additional layout options
         >
