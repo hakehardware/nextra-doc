@@ -1,0 +1,124 @@
+---
+title: Media
+asIndexPage: true
+---
+
+# Media
+
+A complete self-hosted media automation and streaming stack that rivals any commercial streaming service.
+
+## Overview
+
+Building a self-hosted media stack means never worrying about content being removed from streaming platforms, maintaining complete privacy, and having full control over your media library. This section covers the complete ecosystem needed to automatically acquire, organize, and stream your media collection.
+
+## The Complete Media Stack
+
+### Frontend Apps (What You Use)
+
+These are the apps you and your family/friends interact with to consume content:
+
+**[Jellyfin](https://jellyfin.org/)** - Your personal Netflix
+- Stream TV shows, movies, and music to any device
+- Hardware-accelerated transcoding for smooth playback
+- Apps for all platforms (web, mobile, TV, desktop)
+- User management with watch progress tracking
+
+**[Audiobookshelf](https://www.audiobookshelf.org/)** - Audiobook & Podcast Management
+- Beautiful interface for audiobooks and podcasts
+- Progress tracking across devices
+- Sleep timers and playback speed controls
+- Metadata management and organization
+
+**[Calibre-Web](https://github.com/janeczku/calibre-web)** - eBook Library
+- Web-based eBook library management
+- Send books directly to Kindle devices
+- Reading progress tracking
+- OPDS support for eReader apps
+
+### Backend Automation (The *arr Stack)
+
+The magic behind the scenes - these tools automatically find, download, and organize your media:
+
+**[Prowlarr](https://github.com/Prowlarr/Prowlarr)** - Indexer Manager (Configure First!)
+- Central hub for managing all your indexers
+- Automatically syncs indexers to all *arr apps
+- Tests and monitors indexer health
+- Single point of configuration
+
+**[Sonarr](https://sonarr.tv/)** - TV Show Automation
+- Automatically downloads new episodes as they air
+- Upgrades quality when better versions are available
+- Manages entire series, including back-cataloging
+- Renames and organizes files perfectly
+
+**[Radarr](https://radarr.video/)** - Movie Automation
+- Automatic movie discovery and downloading
+- Quality profiles and upgrade management
+- Collection management for movie series
+- Integration with lists (IMDb, Trakt, etc.)
+
+**[Lidarr](https://lidarr.audio/)** - Music Automation
+- Automatic music collection management
+- Album monitoring and downloading
+- Artist tracking for new releases
+- Metadata tagging and organization
+
+**[Readarr](https://readarr.com/)** - Book & Audiobook Automation
+- eBook and audiobook automation
+- Author tracking for new releases
+- Metadata management
+- Calibre integration
+
+### Request Management
+
+**[Jellyseerr](https://github.com/Fallenbagel/jellyseerr)** - User Requests for Jellyfin
+- Beautiful UI for family/friends to request content
+- Integrates with Sonarr and Radarr
+- User permission management
+- Request approval workflows
+- Notifications when content is available
+
+### Download Client (Required)
+
+**[qBittorrent](https://www.qbittorrent.org/)** - Download Client
+- The engine that downloads your content
+- Web UI for remote management
+- VPN integration support
+- Required by all *arr apps
+- *Alternative: SABnzbd for Usenet users*
+
+## How It All Works Together
+
+1. **Configure Prowlarr** with your indexers (sources for finding content)
+2. **Link all *arr apps** to Prowlarr (they automatically inherit indexers)
+3. **Configure qBittorrent** as the download client in each *arr app
+4. **Add content** you want through the *arr apps (or let users request via Jellyseerr)
+5. **Automation happens**:
+   - *arr apps search indexers for content
+   - Downloads are sent to qBittorrent
+   - When complete, files are moved and renamed
+   - Media folders are organized perfectly
+6. **Frontend apps scan** and make content available
+7. **Stream and enjoy** from any device!
+
+## Why This Stack?
+
+- **Fully Automated**: Set it once, forget it. New episodes download automatically
+- **Quality Control**: Define your preferred quality and let the system upgrade when better versions appear
+- **Family Friendly**: Non-technical users can request content through Jellyseerr
+- **Privacy First**: Your viewing habits stay on your infrastructure
+- **No Subscriptions**: One-time setup, zero recurring fees
+- **Complete Control**: Every aspect is configurable to your preferences
+- **Always Available**: No content disappears due to licensing changes
+
+## Hardware Considerations
+
+A complete media stack benefits from:
+- **Storage**: Large capacity for growing libraries (4TB+ recommended)
+- **CPU/GPU**: Hardware transcoding for Jellyfin (Intel QuickSync or NVIDIA GPU)
+- **Network**: Gigabit networking for smooth 4K streaming
+- **RAM**: 8GB+ for running all services comfortably
+
+## Getting Started
+
+Select a component from the sidebar to learn how to deploy and configure your complete media automation stack.

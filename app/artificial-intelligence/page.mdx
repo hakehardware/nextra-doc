@@ -1,0 +1,53 @@
+---
+title: Artificial Intelligence
+asIndexPage: true
+---
+
+# Artificial Intelligence
+
+Comprehensive guides for deploying and managing AI infrastructure, from image generation to large language models.
+
+## Overview
+
+This section covers everything you need to run AI workloads on your self-hosted infrastructure. Whether you're setting up image generation with ComfyUI, running local LLMs with Ollama, or creating user-friendly interfaces with Open WebUI, these guides will walk you through multiple deployment options.
+
+## Featured Tools
+
+### ComfyUI
+A powerful and modular interface for Stable Diffusion and other image generation models. ComfyUI offers a node-based workflow system that gives you complete control over your image generation pipeline.
+
+**Deployment Options:**
+- Proxmox LXC containers
+- Docker containers
+- Bare metal installation (like on Bob, your AI machine)
+
+### Ollama
+Run large language models locally with ease. Ollama provides a simple interface for downloading, managing, and running models like Llama 3, Mistral, and more.
+
+**Deployment Options:**
+- Proxmox VMs with GPU passthrough
+- Docker containers with NVIDIA runtime
+
+### Open WebUI
+A feature-rich web interface for interacting with LLMs. Similar to ChatGPT's interface but for your self-hosted models. Connect it to Ollama or other OpenAI-compatible APIs.
+
+**Deployment Options:**
+- Docker containers
+- Integration guides for connecting to Ollama and other AI services
+
+## Hardware Considerations
+
+Running AI workloads efficiently requires proper hardware:
+- **GPU requirements** for image generation and LLM inference
+- **RAM considerations** for different model sizes
+- **Storage planning** for models and generated content
+
+Many guides in this section reference "Bob" - a dedicated bare metal AI machine optimized for these workloads.
+
+## Integration with Other Services
+
+AI tools become even more powerful when integrated with automation platforms like n8n or Home Assistant. Check the **Automation** section for guides on connecting these services together.
+
+---
+
+Select an AI tool from the sidebar to get started with your deployment.
