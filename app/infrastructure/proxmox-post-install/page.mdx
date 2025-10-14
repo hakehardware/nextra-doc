@@ -6,6 +6,8 @@ title: Proxmox Post-Install Script
 
 Automate essential Proxmox VE post-installation tasks with a single community-maintained script. This eliminates manual configuration and gets your system production-ready in minutes.
 
+> **Version Reference**: This guide is written for **Proxmox VE 8.3/8.4** (based on Debian 12 "Bookworm"). The script is regularly maintained by the community and works across multiple Proxmox versions.
+
 ## What is the Post-Install Script?
 
 The [Proxmox VE Post Install Script](https://community-scripts.github.io/ProxmoxVE/scripts?id=post-pve-install) is a community-maintained tool that automates common post-installation tasks. Created by @tteck and now maintained by the community, it handles repository configuration, system updates, and quality-of-life improvements automatically.
@@ -64,13 +66,19 @@ This script automates the manual steps you'd otherwise perform:
 ```bash
 # Disable enterprise repository
 echo "# deb https://enterprise.proxmox.com/debian/pve bookworm pve-enterprise" > /etc/apt/sources.list.d/pve-enterprise.list
+```
 
+```bash
 # Enable no-subscription repository
 echo "deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription" > /etc/apt/sources.list.d/pve-no-subscription.list
+```
 
+```bash
 # Update and upgrade
 apt update && apt dist-upgrade -y
+```
 
+```bash
 # Disable subscription nag
 sed -Ezi.bak "s/(Ext.Msg.show\(\{\s+title: gettext\('No valid sub)/void\(\{ \/\/\1/g" /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
 systemctl restart pveproxy.service

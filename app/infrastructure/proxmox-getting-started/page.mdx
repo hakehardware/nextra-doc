@@ -1,0 +1,546 @@
+---
+title: Proxmox - Getting Started
+---
+
+# Getting Started with Proxmox VE
+
+Now that Proxmox is installed and configured, let's explore the essential tasks you'll perform regularly. This guide covers creating VMs, containers, managing storage, and navigating the web interface.
+
+> **Version Reference**: This guide is written for **Proxmox VE 8.4** (based on Debian 12.10 "Bookworm", released April 2025). Commands and UI may differ in future versions.
+
+## Understanding the Web Interface
+
+When you log into Proxmox at `https://YOUR-IP:8006`, you'll see:
+
+### Left Sidebar - Datacenter Tree
+- **Datacenter**: Top-level container for your entire infrastructure
+  - **Node(s)**: Individual Proxmox servers (you'll have at least one)
+    - **VMs**: Virtual machines (QEMU/KVM)
+    - **Containers**: LXC containers
+    - **Storage**: Available storage locations
+    - **Disks**: Physical disks attached to the node
+
+### Main Panel - Management Area
+- Changes based on what you select in the sidebar
+- Shows summary statistics, resource usage, and action buttons
+
+### Top Toolbar
+- **Create VM**: Quick access to VM wizard
+- **Create CT**: Quick access to container wizard
+- **Search**: Find VMs, containers, and resources quickly
+
+{/* Add screenshot: Proxmox web interface overview */}
+
+## Storage Overview
+
+Before creating VMs or containers, understand your storage options:
+
+### Storage Types
+
+**Local Storage** (default):
+- **local**: Directory storage for ISO images, backups, and container templates
+- **local-lvm**: LVM storage for VM disks (block storage, better performance)
+
+**Network Storage** (optional):
+- **NFS**: Network File System shares
+- **SMB/CIFS**: Windows file shares
+- **iSCSI**: Block-level storage over network
+- **Ceph**: Distributed storage (advanced, requires multiple nodes)
+
+### Checking Available Storage
+
+1. Click on your node in the sidebar
+2. Click **Disks** to see physical storage
+3. Click **Datacenter → Storage** to see configured storage locations
+
+{/* Add screenshot: Storage view */}
+
+> **Pro Tip**: Use **local-lvm** for VM disks (better performance) and **local** for ISOs, backups, and container templates.
+
+## Creating Your First VM
+
+VMs (Virtual Machines) provide full hardware virtualization and can run any operating system.
+
+### Step 1: Upload an ISO Image
+
+1. Click **Datacenter → [your-node] → local (storage)**
+2. Click **ISO Images**
+3. Click **Upload** or **Download from URL**
+4. Upload your OS installation ISO (Ubuntu, Windows, etc.)
+
+{/* Add screenshot: ISO upload */}
+
+### Step 2: Create the VM
+
+1. Click **Create VM** in the top-right corner
+2. Follow the wizard:
+
+#### General Tab
+- **Node**: Select your Proxmox node
+- **VM ID**: Unique identifier (usually auto-assigned)
+- **Name**: Descriptive name (e.g., "ubuntu-server")
+
+#### OS Tab
+- **Storage**: Select **local**
+- **ISO image**: Choose your uploaded ISO
+- **Guest OS Type**: Select the appropriate OS type (Linux, Windows, etc.)
+
+#### System Tab
+- **Graphic card**: Default (SPICE or VirtIO-GPU)
+- **Machine**: q35 (recommended for modern OSes)
+- **BIOS**: SeaBIOS (default) or OVMF for UEFI
+- **SCSI Controller**: VirtIO SCSI (recommended)
+
+> **Pro Tip**: Use **VirtIO drivers** for best performance. Windows requires VirtIO driver ISO downloaded separately.
+
+#### Disks Tab
+- **Bus/Device**: VirtIO Block or SCSI
+- **Storage**: local-lvm (recommended)
+- **Disk size**: Allocate appropriate space (e.g., 32GB)
+- **Cache**: Default (No cache) or Write back (faster but riskier)
+
+#### CPU Tab
+- **Cores**: Number of CPU cores (start with 2-4)
+- **Type**: host (best performance for homelab)
+
+#### Memory Tab
+- **Memory (MiB)**: RAM allocation (e.g., 2048 for 2GB, 4096 for 4GB)
+- **Ballooning**: Keep enabled (allows dynamic memory adjustment)
+
+#### Network Tab
+- **Bridge**: vmbr0 (default bridge)
+- **Model**: VirtIO (paravirtualized, best performance)
+- **Firewall**: Check if you want to use Proxmox firewall
+
+3. Click **Finish** (don't start yet)
+
+{/* Add screenshot: VM creation wizard */}
+
+### Step 3: Start and Install the OS
+
+1. Select your new VM in the sidebar
+2. Click **Start** in the top-right
+3. Click **Console** to access the VM display
+4. Follow the OS installation process
+
+> **Pro Tip**: Use the **noVNC** console for quick access, or **xterm.js** for a terminal-only interface. SPICE client offers the best performance for desktop OSes.
+
+### Step 4: Post-Installation Tasks
+
+After OS installation:
+
+**Install QEMU Guest Agent** (recommended):
+
+For **Ubuntu/Debian**:
+```bash
+sudo apt update
+```
+
+```bash
+sudo apt install qemu-guest-agent -y
+```
+
+```bash
+sudo systemctl start qemu-guest-agent
+```
+
+For **CentOS/Rocky/Alma**:
+```bash
+sudo dnf install qemu-guest-agent -y
+```
+
+```bash
+sudo systemctl start qemu-guest-agent
+```
+
+For **Windows**:
+- Download VirtIO drivers ISO from [Fedora Project](https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/)
+- Mount ISO in VM
+- Install virtio-win-guest-tools.exe
+
+Then in Proxmox:
+1. Select the VM → **Options**
+2. Double-click **QEMU Guest Agent**
+3. Check **Use QEMU Guest Agent**
+4. Click **OK**
+
+> **Pro Tip**: The QEMU Guest Agent enables better VM management, proper shutdown commands, and accurate resource reporting.
+
+## Creating LXC Containers
+
+LXC containers are lightweight, share the host kernel, and start instantly. Perfect for services like web servers, databases, and Docker hosts.
+
+### Step 1: Download a Container Template
+
+1. Click on your node → **local (storage)**
+2. Click **CT Templates**
+3. Click **Templates** button
+4. Select a template (e.g., **ubuntu-24.04-standard**)
+5. Click **Download**
+
+{/* Add screenshot: Template download */}
+
+### Step 2: Create the Container
+
+1. Click **Create CT** in the top-right corner
+2. Follow the wizard:
+
+#### General Tab
+- **Node**: Select your node
+- **CT ID**: Unique identifier (auto-assigned)
+- **Hostname**: Container hostname (e.g., "docker-host")
+- **Password**: Root password for the container
+- **SSH public key**: Optional (paste your SSH key for key-based login)
+
+#### Template Tab
+- **Storage**: local
+- **Template**: Select your downloaded template
+
+#### Root Disk Tab
+- **Storage**: local-lvm
+- **Disk size (GiB)**: Allocate space (e.g., 8-16GB)
+
+#### CPU Tab
+- **Cores**: Number of CPU cores (1-2 is usually enough)
+
+#### Memory Tab
+- **Memory (MiB)**: RAM allocation (512-1024 for most services)
+- **Swap (MiB)**: Swap space (512-1024)
+
+#### Network Tab
+- **Name**: eth0 (default)
+- **Bridge**: vmbr0
+- **IPv4**: DHCP or Static
+- **IPv6**: DHCP or Static (or leave blank)
+
+3. Click **Finish**
+
+{/* Add screenshot: Container creation wizard */}
+
+### Step 3: Start and Access the Container
+
+1. Select your container in the sidebar
+2. Click **Start**
+3. Click **Console** to access the container
+4. Log in with root and the password you set
+
+> **Pro Tip**: Containers start in 1-2 seconds compared to 30+ seconds for VMs!
+
+### Container Best Practices
+
+**Privileged vs Unprivileged**:
+- **Unprivileged** (default): More secure, uses user namespaces
+- **Privileged**: Required for Docker, NFS mounts, and some hardware access
+
+To make a container privileged:
+1. Select container → **Options**
+2. Double-click **Unprivileged container**
+3. Uncheck it (requires container shutdown)
+
+**For Docker in LXC**:
+```bash
+apt update
+```
+
+```bash
+apt install curl -y
+```
+
+```bash
+curl -fsSL https://get.docker.com | sh
+```
+
+Then edit container settings:
+1. Shut down the container
+2. Click **Options** → **Features**
+3. Enable **keyctl**, **nesting**, and **fuse**
+4. Start the container
+
+## Managing Storage
+
+### Adding Local Storage
+
+If you have additional physical disks:
+
+1. Click on your node → **Disks**
+2. Click **Initialize Disk with GPT** for new disks
+3. Create storage:
+   - **LVM**: Click **LVM** tab → **Create: Volume Group**
+   - **Directory**: Click **Directory** tab → **Create: Directory**
+   - **ZFS**: Click **ZFS** tab → **Create: ZFS** (requires ZFS support)
+
+4. Go to **Datacenter → Storage** → **Add** to make it available
+
+{/* Add screenshot: Storage configuration */}
+
+### Adding Network Storage (NFS Example)
+
+1. Click **Datacenter → Storage** → **Add → NFS**
+2. Configure:
+   - **ID**: Unique name (e.g., "nas-share")
+   - **Server**: NFS server IP
+   - **Export**: NFS export path (e.g., "/mnt/storage")
+   - **Content**: Select what to store (Disk image, ISO, Container, etc.)
+3. Click **Add**
+
+## Basic Networking
+
+Proxmox uses Linux bridges for VM/container networking.
+
+### Default Network Bridge (vmbr0)
+
+By default, Proxmox creates **vmbr0** which bridges to your physical network interface. All VMs and containers on vmbr0 can access your network.
+
+### Viewing Network Configuration
+
+In the shell:
+```bash
+ip addr show
+```
+
+```bash
+cat /etc/network/interfaces
+```
+
+### Creating Additional Bridges
+
+1. Click on your node → **Network**
+2. Click **Create → Linux Bridge**
+3. Configure:
+   - **Name**: vmbr1 (or next available number)
+   - **IPv4/CIDR**: Optional (e.g., 10.0.1.1/24 for isolated network)
+   - **Bridge ports**: Leave empty for isolated network, or add physical interface
+4. Click **Create**
+5. Click **Apply Configuration**
+
+> **Pro Tip**: Create isolated bridges for lab environments or to separate production and testing VMs.
+
+## Essential VM and Container Operations
+
+### Starting, Stopping, and Restarting
+
+**Start**:
+- Select VM/container → **Start** button
+
+**Shutdown** (graceful):
+- Select VM/container → **Shutdown** button
+
+**Stop** (force):
+- Select VM/container → **Stop** button
+
+**Reboot**:
+- Select VM/container → **Reboot** button
+
+### Taking Snapshots
+
+Snapshots let you save VM/container state before changes:
+
+1. Select VM/container → **Snapshots**
+2. Click **Take Snapshot**
+3. Name it descriptively (e.g., "before-upgrade")
+4. Include RAM (optional, creates memory snapshot)
+5. Click **Take Snapshot**
+
+To restore:
+1. **Snapshots** tab
+2. Select snapshot → **Rollback**
+
+> **Warning**: Snapshots are not backups! They depend on the original disk. Use the backup system for real backups.
+
+### Creating Backups
+
+1. Select VM/container → **Backup**
+2. Click **Backup now**
+3. Configure:
+   - **Storage**: Where to save (local or remote)
+   - **Mode**: Snapshot (fast) or Stop (safest)
+   - **Compression**: LZO (fast) or ZSTD (better compression)
+4. Click **Backup**
+
+To schedule regular backups:
+1. Click **Datacenter → Backup**
+2. Click **Add**
+3. Configure schedule and selection
+4. Click **Create**
+
+{/* Add screenshot: Backup configuration */}
+
+## Common Administrative Tasks
+
+### Checking Resource Usage
+
+**Node Summary**:
+- Click on your node to see CPU, memory, storage, and network usage
+
+**VM/Container Resources**:
+- Select VM/container → **Summary** to see resource usage
+
+### Updating Proxmox
+
+From the shell:
+```bash
+apt update
+```
+
+```bash
+apt dist-upgrade -y
+```
+
+Or from the UI:
+1. Click on your node → **Updates**
+2. Click **Refresh**
+3. Review updates
+4. Click **Upgrade**
+
+> **Pro Tip**: Subscribe to Proxmox VE mailing list or check the forum before major updates for known issues.
+
+### Monitoring Logs
+
+**System Logs**:
+- Click on your node → **Syslog** (last 500 lines)
+
+**VM/Container Logs**:
+- Select VM/container → **Logs**
+
+**Task History**:
+- Click on your node → **Tasks** to see all operations
+
+### Managing Users and Permissions
+
+**Add a User**:
+1. Click **Datacenter → Permissions → Users** → **Add**
+2. Configure user details
+3. Assign realm (usually PVE or LDAP)
+
+**Set Permissions**:
+1. Click **Datacenter → Permissions** → **Add → User Permission**
+2. Select path (/, /vms, /storage, etc.)
+3. Choose user and role (NoAccess, PVEAdmin, PVEAuditor, etc.)
+
+> **Pro Tip**: Create separate users for team members instead of sharing the root password!
+
+## Useful Shell Commands
+
+Access the shell by clicking your node → **Shell**, then use these commands:
+
+**List all VMs and containers**:
+```bash
+qm list
+```
+
+```bash
+pct list
+```
+
+**Start a VM** (replace 100 with VM ID):
+```bash
+qm start 100
+```
+
+**Start a container** (replace 100 with CT ID):
+```bash
+pct start 100
+```
+
+**Check Proxmox version**:
+```bash
+pveversion
+```
+
+**Check cluster status** (for multi-node setups):
+```bash
+pvecm status
+```
+
+**Monitor system resources**:
+```bash
+htop
+```
+
+**Check disk usage**:
+```bash
+df -h
+```
+
+**View running VMs/containers**:
+```bash
+qm list | grep running
+```
+
+```bash
+pct list | grep running
+```
+
+## Next Steps
+
+Now that you understand the basics:
+
+- **Explore the community scripts**: [community-scripts.github.io/ProxmoxVE](https://community-scripts.github.io/ProxmoxVE/) for one-command LXC container deployments
+- **Set up scheduled backups**: Datacenter → Backup
+- **Configure firewall rules**: Datacenter → Firewall
+- **Experiment with templates**: Create a VM/container, configure it, and convert it to a template for quick deployments
+- **Learn about clustering**: Connect multiple Proxmox nodes for high availability (advanced)
+
+## Pro Tips & Best Practices
+
+### VM Management
+- Use **cloud-init** images for faster Linux VM provisioning (pre-configured, no installation needed)
+- Enable **Start at boot** for critical VMs: VM Options → Start at boot
+- Set **Start/Shutdown order** for dependencies: VM Options → Start/Shutdown order
+- Use VM **tags** for organization: VM → More → Manage Tags
+
+### Container Management
+- Containers are perfect for **stateless services** (web servers, reverse proxies)
+- Use VMs for **complex applications** requiring kernel modules
+- Keep containers **small and focused** (single service per container)
+- Use **bind mounts** to share host directories with containers
+
+### Storage Management
+- Monitor storage usage regularly (Datacenter → Storage)
+- Use **thin provisioning** for VMs to save space (enabled by default)
+- Keep **15-20% free space** on storage for snapshots and overhead
+- Consider **ZFS** for advanced features (snapshots, compression, deduplication)
+
+### Backup Strategy
+- Follow **3-2-1 rule**: 3 copies, 2 different media types, 1 offsite
+- Test restores periodically to ensure backups work
+- Use **protected** flag on critical backups to prevent accidental deletion
+- Store backups on separate physical storage if possible
+
+## Official Documentation
+
+For advanced topics and detailed technical information:
+
+- **[Proxmox VE Documentation](https://pve.proxmox.com/pve-docs/)** - Comprehensive official documentation
+- **[Proxmox VE Admin Guide](https://pve.proxmox.com/pve-docs/pve-admin-guide.html)** - Complete administration reference
+- **[Proxmox VE Wiki](https://pve.proxmox.com/wiki/Main_Page)** - Community documentation and tutorials
+- **[Proxmox Forum](https://forum.proxmox.com/)** - Active community support
+
+## Troubleshooting
+
+### VM Won't Start
+- Check resource availability (CPU, RAM, storage)
+- Review **Tasks** log for error messages
+- Verify disk storage has space: `df -h`
+- Check VM configuration: select VM → **Hardware** for issues
+
+### Container Network Issues
+- Verify bridge configuration: `ip addr show vmbr0`
+- Check firewall rules: Datacenter → Firewall
+- Restart networking: `systemctl restart networking`
+- Verify container has correct network settings: Container → **Network**
+
+### Can't Access Web Interface
+- Verify service is running: `systemctl status pveproxy`
+- Check firewall: `iptables -L`
+- Restart web interface: `systemctl restart pveproxy pvedaemon`
+
+### Storage Full
+- Check usage: `df -h`
+- Remove old backups: Datacenter → Backup → select and delete
+- Delete unused templates: local → CT Templates or ISO Images
+- Clean up old log files: `journalctl --vacuum-time=7d`
+
+---
+
+**Ready to deploy services?** Check out the [Community Scripts](https://community-scripts.github.io/ProxmoxVE/) for one-command LXC container deployments of popular services!
