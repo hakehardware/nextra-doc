@@ -1,0 +1,195 @@
+---
+title: Proxmox Post-Install Script
+---
+
+# Proxmox Post-Install Script
+
+Automate essential Proxmox VE post-installation tasks with a single community-maintained script. This eliminates manual configuration and gets your system production-ready in minutes.
+
+## What is the Post-Install Script?
+
+The [Proxmox VE Post Install Script](https://community-scripts.github.io/ProxmoxVE/scripts?id=post-pve-install) is a community-maintained tool that automates common post-installation tasks. Created by @tteck and now maintained by the community, it handles repository configuration, system updates, and quality-of-life improvements automatically.
+
+## What It Does
+
+The script performs several essential configurations:
+
+### Repository Management
+- **Disables Enterprise Repository** - Removes the subscription-only repo
+- **Enables No-Subscription Repository** - Adds the free community repo
+- **Optionally adds Test Repository** - For users who want bleeding-edge updates
+- **Optionally adds Ceph Repository** - For Ceph storage users
+
+### System Improvements
+- **Updates System Packages** - Brings everything up to date
+- **Disables Subscription Nag** - Removes the "No valid subscription" popup
+- **Updates LXC Templates** - Refreshes the container template list
+- **Disables High Availability** (optional) - For single-node setups
+
+## Quick Start
+
+### Running the Script
+
+1. After Proxmox installation, log into the web interface at `https://YOUR-IP:8006`
+2. Click on your node name in the left sidebar
+3. Click **Shell** to open the terminal
+4. Run the following command:
+
+```bash
+bash -c "$(wget -qLO - https://github.com/community-scripts/ProxmoxVE/raw/main/misc/post-pve-install.sh)"
+```
+
+{/* Add screenshot: Running the post-install script */}
+
+### Interactive Prompts
+
+The script will ask you several questions:
+
+1. **Correct Proxmox VE sources?** - Choose `y` (yes)
+2. **Disable Enterprise Repository?** - Choose `y` (yes for homelab)
+3. **Enable No-Subscription Repository?** - Choose `y` (yes)
+4. **Add PVETest Repository?** - Choose `n` (no, unless you want beta features)
+5. **Enable Ceph Repository?** - Choose `y` only if you plan to use Ceph storage
+6. **Disable Subscription Nag?** - Choose `y` (yes)
+7. **Update Proxmox VE?** - Choose `y` (yes, recommended)
+8. **Reboot Proxmox VE?** - Choose `y` after updates complete
+
+> **Pro Tip**: For most homelab users, answer `y` to everything except "Add PVETest Repository" and possibly "Enable Ceph Repository".
+
+## What This Replaces
+
+This script automates the manual steps you'd otherwise perform:
+
+### Without the Script (Manual)
+```bash
+# Disable enterprise repository
+echo "# deb https://enterprise.proxmox.com/debian/pve bookworm pve-enterprise" > /etc/apt/sources.list.d/pve-enterprise.list
+
+# Enable no-subscription repository
+echo "deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription" > /etc/apt/sources.list.d/pve-no-subscription.list
+
+# Update and upgrade
+apt update && apt dist-upgrade -y
+
+# Disable subscription nag
+sed -Ezi.bak "s/(Ext.Msg.show\(\{\s+title: gettext\('No valid sub)/void\(\{ \/\/\1/g" /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
+systemctl restart pveproxy.service
+```
+
+### With the Script (Automated)
+```bash
+bash -c "$(wget -qLO - https://github.com/community-scripts/ProxmoxVE/raw/main/misc/post-pve-install.sh)"
+# Answer the prompts and you're done!
+```
+
+## Advanced Options
+
+### Running Non-Interactively
+
+If you want to automate the script with pre-set answers:
+
+```bash
+# Example: Accept all defaults automatically (not recommended for first-time users)
+yes | bash -c "$(wget -qLO - https://github.com/community-scripts/ProxmoxVE/raw/main/misc/post-pve-install.sh)"
+```
+
+### Verifying Repository Configuration
+
+After running the script, verify your repositories:
+
+```bash
+# Check repository sources
+cat /etc/apt/sources.list.d/pve-enterprise.list
+cat /etc/apt/sources.list.d/pve-no-subscription.list
+
+# Update package lists
+apt update
+```
+
+You should see the enterprise repository commented out (or disabled) and the no-subscription repository active.
+
+## When to Use This Script
+
+### ✅ Perfect For:
+- **Fresh Proxmox installations** - Run immediately after installing Proxmox
+- **Homelab setups** - Non-production environments without enterprise subscriptions
+- **Quick deployment** - When you want to get up and running fast
+- **Learning environments** - Students and hobbyists exploring Proxmox
+
+### ⚠️ Consider Manual Configuration If:
+- **Enterprise environment** - You have a Proxmox subscription
+- **Production systems** - You need full control over every change
+- **Custom repository needs** - You use specific package sources
+- **Learning purposes** - You want to understand each step
+
+## Troubleshooting
+
+### Script Fails to Download
+If the wget command fails:
+
+```bash
+# Install wget if missing
+apt update && apt install wget -y
+
+# Or use curl instead
+bash -c "$(curl -fsSL https://github.com/community-scripts/ProxmoxVE/raw/main/misc/post-pve-install.sh)"
+```
+
+### Subscription Nag Still Appears
+If the subscription popup persists after running the script:
+
+```bash
+# Manually restart the proxy service
+systemctl restart pveproxy.service
+
+# Clear browser cache and reload the page
+```
+
+### Repository Errors After Running
+If you see repository errors:
+
+```bash
+# Verify repository configuration
+ls -la /etc/apt/sources.list.d/
+
+# Manually fix if needed (see manual configuration above)
+apt update
+```
+
+## Alternative: Manual Configuration
+
+Prefer to configure manually? See the [main installation guide](/infrastructure/proxmox-install#post-installation-essential-tasks) for step-by-step manual configuration instructions.
+
+## Community Scripts Collection
+
+The post-install script is just one of [400+ scripts](https://community-scripts.github.io/ProxmoxVE/) available from the community. Other useful scripts include:
+
+- **LXC container installers** - One-command deployments for Docker, Portainer, Home Assistant, and more
+- **VM creation scripts** - Automated VM setups
+- **Maintenance utilities** - Backup, cleanup, and monitoring tools
+- **Network configuration** - VLAN, bridge, and bond setup helpers
+
+> **Pro Tip**: Bookmark [community-scripts.github.io/ProxmoxVE](https://community-scripts.github.io/ProxmoxVE/) - you'll reference it often when deploying services!
+
+## Security & Trust
+
+These scripts are:
+- **Open source** - All code is visible on GitHub
+- **Community reviewed** - Multiple contributors review changes
+- **MIT licensed** - Free to use and modify
+- **Actively maintained** - Regular updates and improvements
+
+**Always review scripts before running**, especially when running as root. The scripts are trusted by thousands of Proxmox users, but it's good practice to understand what runs on your system.
+
+## Next Steps
+
+After running the post-install script:
+
+1. **Create your first VM or LXC container**
+2. **Configure storage** - Add additional drives or network storage
+3. **Set up backups** - Configure automated backup schedules
+4. **Explore the community scripts** - Find pre-built containers for services you want to run
+
+---
+
+**Want to understand what each setting does manually?** Check out the [detailed post-installation section](/infrastructure/proxmox-install#post-installation-essential-tasks) in the main installation guide.
