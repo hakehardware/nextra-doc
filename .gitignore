@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# pagefind search index
+_pagefind/
+
+# Claude Code instructions
+CLAUDE.md
