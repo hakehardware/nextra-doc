@@ -98,11 +98,14 @@ yes | bash -c "$(wget -qLO - https://github.com/community-scripts/ProxmoxVE/raw/
 After running the script, verify your repositories:
 
 ```bash
-# Check repository sources
 cat /etc/apt/sources.list.d/pve-enterprise.list
-cat /etc/apt/sources.list.d/pve-no-subscription.list
+```
 
-# Update package lists
+```bash
+cat /etc/apt/sources.list.d/pve-no-subscription.list
+```
+
+```bash
 apt update
 ```
 
@@ -128,10 +131,12 @@ You should see the enterprise repository commented out (or disabled) and the no-
 If the wget command fails:
 
 ```bash
-# Install wget if missing
 apt update && apt install wget -y
+```
 
-# Or use curl instead
+Or use curl instead:
+
+```bash
 bash -c "$(curl -fsSL https://github.com/community-scripts/ProxmoxVE/raw/main/misc/post-pve-install.sh)"
 ```
 
@@ -139,20 +144,19 @@ bash -c "$(curl -fsSL https://github.com/community-scripts/ProxmoxVE/raw/main/mi
 If the subscription popup persists after running the script:
 
 ```bash
-# Manually restart the proxy service
 systemctl restart pveproxy.service
-
-# Clear browser cache and reload the page
 ```
+
+Then clear your browser cache and reload the page.
 
 ### Repository Errors After Running
 If you see repository errors:
 
 ```bash
-# Verify repository configuration
 ls -la /etc/apt/sources.list.d/
+```
 
-# Manually fix if needed (see manual configuration above)
+```bash
 apt update
 ```
 

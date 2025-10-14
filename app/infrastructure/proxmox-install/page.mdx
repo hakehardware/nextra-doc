@@ -149,10 +149,10 @@ After logging in, you'll see a subscription warning. Don't worry - Proxmox is fr
 Open the node shell (click your node name → Shell) and run:
 
 ```bash
-# Update package lists
 apt update
+```
 
-# Upgrade all packages
+```bash
 apt dist-upgrade -y
 ```
 
@@ -161,13 +161,14 @@ apt dist-upgrade -y
 If you're not using a Proxmox subscription (most homelabbers don't), configure the free repository:
 
 ```bash
-# Disable enterprise repository
 echo "# deb https://enterprise.proxmox.com/debian/pve bookworm pve-enterprise" > /etc/apt/sources.list.d/pve-enterprise.list
+```
 
-# Enable no-subscription repository
+```bash
 echo "deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription" > /etc/apt/sources.list.d/pve-no-subscription.list
+```
 
-# Update package lists
+```bash
 apt update
 ```
 
@@ -179,7 +180,9 @@ To remove the subscription popup:
 
 ```bash
 sed -Ezi.bak "s/(Ext.Msg.show\(\{\s+title: gettext\('No valid sub)/void\(\{ \/\/\1/g" /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
+```
 
+```bash
 systemctl restart pveproxy.service
 ```
 
