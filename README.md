@@ -2,7 +2,7 @@
 
 Comprehensive documentation for self-hosting, AI infrastructure, and homelab management. Built with Next.js 15 and Nextra 4.
 
-🌐 **Live Documentation**: [Your deployment URL here]
+🌐 **Live Documentation**: https://docs.localhake.com
 
 ## About
 
