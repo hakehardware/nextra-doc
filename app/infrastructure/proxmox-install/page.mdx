@@ -64,8 +64,6 @@ sudo dd if=proxmox-ve_*.iso of=/dev/rdiskN bs=1m
 3. Set USB as the first boot device or use boot menu
 4. Save and restart
 
-{/* Add screenshot: BIOS boot menu */}
-
 ## Step 4: Install Proxmox VE
 
 ### Choose Installation Type
@@ -73,28 +71,24 @@ sudo dd if=proxmox-ve_*.iso of=/dev/rdiskN bs=1m
 When the installer boots, you'll see several options. Select:
 - **Install Proxmox VE (Graphical)** - Recommended for most users
 
-{/* Add screenshot: Installation menu */}
+![graphical](/photos/infrastructure/proxmox-installation/graphical.png)
+
+Once loaded, accept the EULA to continue.
 
 ### Select Target Disk
-
-1. Click "Options" to choose filesystem:
-   - **ext4**: Simple, reliable, good for single disk setups
-   - **ZFS**: Advanced features (snapshots, RAID), requires more RAM
-   - **LVM**: Flexible storage management
-
-2. Select your target hard drive
-
-> **Pro Tip**: If you're new to Proxmox, start with **ext4**. You can always add additional storage with ZFS later.
+If you're new to Proxmox, start with **ext4**. You can always add additional storage with ZFS later.
 
 > **Warning**: All data on the selected disk will be **permanently erased**!
 
-{/* Add screenshot: Disk selection screen */}
+![target harddisk](/photos/infrastructure/proxmox-installation/target-harddisk.png)
 
 ### Configure Location & Time
 
 1. Select your **Country**
 2. Choose your **Time zone**
 3. Select your **Keyboard Layout**
+
+![time](/photos/infrastructure/proxmox-installation/time.png)
 
 ### Set Administrator Password
 
@@ -103,21 +97,23 @@ When the installer boots, you'll see several options. Select:
 
 > **Pro Tip**: This email receives important system alerts. Use a real address you check regularly, or set up email forwarding later.
 
-{/* Add screenshot: Password configuration */}
+![password](/photos/infrastructure/proxmox-installation/password.png)
 
 ### Network Configuration
 
-1. **Management Interface**: Select your primary network interface
-2. **Hostname**: Give your server a meaningful name (e.g., `pve1.local`)
+For many people this is the hardest to know what to select.
+
+1. **Management Interface**: Select your primary network interface. Typically it is autoselected, and there should be a green dot if active which is a good sign everything is working.
+2. **Hostname**: This does not matter too much. Give your server a meaningful name (e.g., `pve1.internal`)
 3. **IP Address**: Choose between:
    - **DHCP**: Automatic (easier but IP may change)
-   - **Static**: Manual (recommended for servers)
+   - **Static**: Manual (recommended, but must not already be in use, and it is a good idea to reserve this on your router as well)
 4. **Gateway**: Your router's IP address (usually `192.168.1.1`)
 5. **DNS Server**: Use your router's IP or public DNS (e.g., `8.8.8.8`)
 
 > **Pro Tip**: Use a **static IP** for your Proxmox host. Document this IP - you'll need it to access the web interface!
 
-{/* Add screenshot: Network configuration */}
+![network](/photos/infrastructure/proxmox-installation/network.png)
 
 ### Review & Install
 
@@ -126,6 +122,16 @@ When the installer boots, you'll see several options. Select:
 3. Wait for installation (usually 5-10 minutes)
 4. Remove USB drive when prompted
 5. Reboot
+
+When the host boots up you should see the boot menu. It should have the correct option selected and will proceed automatically
+
+![boot menu](/photos/infrastructure/proxmox-installation/boot-menu.png)
+
+Once the system boots up you will see a login screen with the IP listed.
+
+![host login](/photos/infrastructure/proxmox-installation/host-login.png)
+
+You do not need to log in via the terminal.
 
 ## Step 5: Access Proxmox Web Interface
 
@@ -138,59 +144,13 @@ When the installer boots, you'll see several options. Select:
    - **Realm**: `Linux PAM standard authentication`
    - **Password**: The password you set during installation
 
-{/* Add screenshot: Login screen */}
+![login](/photos/infrastructure/proxmox-installation/login.png)
 
 > **Pro Tip**: Bookmark this URL! You'll access it frequently.
 
 ## Post-Installation: Essential Tasks
 
-> **⚡ Quick Option**: Want to automate these steps? Check out the [Post-Install Script](/infrastructure/proxmox-post-install) that handles repository configuration, updates, and subscription nag removal automatically with a single command!
-
-You can configure these settings manually (shown below) or use the automated script above.
-
-### 1. Update Proxmox
-
-After logging in, you'll see a subscription warning. Don't worry - Proxmox is free to use!
-
-Open the node shell (click your node name → Shell) and run:
-
-```bash
-apt update
-```
-
-```bash
-apt dist-upgrade -y
-```
-
-### 2. Configure Update Repositories (No Subscription)
-
-If you're not using a Proxmox subscription (most homelabbers don't), configure the free repository:
-
-```bash
-echo "# deb https://enterprise.proxmox.com/debian/pve bookworm pve-enterprise" > /etc/apt/sources.list.d/pve-enterprise.list
-```
-
-```bash
-echo "deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription" > /etc/apt/sources.list.d/pve-no-subscription.list
-```
-
-```bash
-apt update
-```
-
-> **Pro Tip**: The "no subscription" repository is perfectly fine for homelab use. The enterprise repository requires a paid subscription.
-
-### 3. Disable Subscription Nag (Optional)
-
-To remove the subscription popup:
-
-```bash
-sed -Ezi.bak "s/(Ext.Msg.show\(\{\s+title: gettext\('No valid sub)/void\(\{ \/\/\1/g" /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
-```
-
-```bash
-systemctl restart pveproxy.service
-```
+Check out the [Post-Install Script](/infrastructure/proxmox-post-install) that handles repository configuration, updates, and subscription nag removal automatically with a single command!
 
 ## Next Steps
 
@@ -201,31 +161,6 @@ Now that Proxmox is installed, you can:
 - **Configure storage**: Add additional drives or network storage
 - **Set up backups**: Configure automated backup schedules
 - **Explore clustering**: Connect multiple Proxmox hosts (advanced)
-
-## Pro Tips & Best Practices
-
-### Hardware Considerations
-- **Use SSDs** for VM storage - the performance difference is massive
-- **ECC RAM** is recommended for production but not required for homelabs
-- **Dedicated NICs** for storage networks improve performance
-- **Consider a UPS** to prevent data corruption during power loss
-
-### Network Setup
-- Reserve the Proxmox IP in your router's DHCP settings
-- Consider setting up a separate VLAN for management traffic
-- Use multiple NICs for redundancy and performance (bonding)
-
-### Storage Planning
-- Keep the OS on a separate disk from VM storage if possible
-- Use local storage for VMs that need high performance
-- Network storage (NFS, Ceph) works great for backups and less critical VMs
-- Set up regular backups from day one
-
-### Security
-- Change the root password periodically
-- Set up two-factor authentication (2FA)
-- Use firewall rules to restrict access to port 8006
-- Keep Proxmox updated regularly
 
 ## Official Documentation
 
