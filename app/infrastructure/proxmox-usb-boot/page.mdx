@@ -2,7 +2,11 @@
 title: Booting a VM from USB in Proxmox
 ---
 
+import { YouTubeEmbed } from '@/components/YouTubeEmbed'
+
 # Booting a VM from USB in Proxmox
+
+<YouTubeEmbed videoId="ow9mShfIo4Y" />
 
 Learn how to pass through a physical USB device to a Proxmox VM and configure it to boot from that USB drive. This is useful for USB-based installers, live environments, or running portable operating systems.
 
@@ -21,14 +25,14 @@ Learn how to pass through a physical USB device to a Proxmox VM and configure it
 
 Before starting, ensure you have:
 - A physical USB drive connected to your Proxmox host
-- A VM already created (powered off)
+- A Proxmox system
 - Root/sudo access to Proxmox shell
 
-## Method 1: USB Passthrough (Recommended)
+## USB Passthrough
 
 This method passes the entire USB device to the VM, allowing the VM to boot from it directly.
 
-### Step 1: Identify Your USB Device
+### Step 1: Identify Your USB Device (Optional)
 
 First, plug in your USB drive to the Proxmox host and identify it:
 
@@ -37,19 +41,17 @@ lsusb
 ```
 
 You'll see output like:
-```
-Bus 002 Device 005: ID 0781:5583 SanDisk Corp. Ultra Fit
-Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
-Bus 001 Device 003: ID 046d:c52b Logitech, Inc. Unifying Receiver
-```
 
-Note the **Bus number** and **Device number** (e.g., Bus 002 Device 005).
+![lsusb command output showing USB devices](/photos/infrastructure/proxmox-usb-boot/lsusb.png)
 
-Also note the **Vendor ID** and **Product ID** (e.g., `0781:5583`).
+Note the **Bus number** and **Device number** (e.g., Bus 002 Device 004).
 
-{/* Add screenshot: lsusb output */}
+Also note the **Vendor ID** and **Product ID** (e.g., `0781:5581`).
 
 ### Step 2: Add USB Device to VM (Web Interface)
+
+![add usb device](/photos/infrastructure/proxmox-usb-boot/add-usb-device.png)
+
 
 1. In the Proxmox web interface, select your VM
 2. Go to **Hardware** tab
@@ -57,18 +59,22 @@ Also note the **Vendor ID** and **Product ID** (e.g., `0781:5583`).
 4. Choose one of two methods:
 
 #### Option A: Use Vendor/Device ID (Recommended for Consistent Mapping)
+
+![vendor device id](/photos/infrastructure/proxmox-usb-boot/vendor-deviceid.png)
+
 - Select **Use USB Vendor/Device ID**
-- Select your device from the dropdown
-- Check **USB3** if it's a USB 3.0 device
+- Find the associated USB device
 - Click **Add**
 
 #### Option B: Use USB Port
+
+![usb-port](/photos/infrastructure/proxmox-usb-boot/usb-port.png)
+
 - Select **Use USB Port**
-- Enter the port in format: `<bus>-<port>` (e.g., `2-1`)
-- Check **USB3** if applicable
+- Find the associated USB device
 - Click **Add**
 
-{/* Add screenshot: Add USB Device dialog */}
+
 
 > **Pro Tip**: Using **Vendor/Device ID** is better because the device will work even if you plug it into a different USB port. Using **USB Port** ties the mapping to a specific physical port.
 
@@ -76,8 +82,13 @@ Also note the **Vendor ID** and **Product ID** (e.g., `0781:5583`).
 
 Now configure the VM to boot from the USB device:
 
+![boot order](/photos/infrastructure/proxmox-usb-boot/boot-order.png)
+
 1. Select your VM → **Options** tab
 2. Double-click **Boot Order**
+
+![boot order](/photos/infrastructure/proxmox-usb-boot/boot-order-2.png)
+
 3. Enable the USB device (check the box)
 4. Drag it to the top of the boot order
 5. Click **OK**
@@ -91,122 +102,6 @@ Now configure the VM to boot from the USB device:
 3. The VM should now boot from the USB drive
 
 > **Pro Tip**: If the VM doesn't boot from USB, you may need to enter the BIOS/boot menu and manually select the USB device. See troubleshooting section below.
-
-## Method 2: USB Passthrough via Command Line
-
-For advanced users or automation, you can add USB devices via the command line.
-
-### Step 1: Identify USB Device
-
-```bash
-lsusb
-```
-
-Note the Vendor:Product ID (e.g., `0781:5583`).
-
-### Step 2: Add USB to VM Configuration
-
-Edit the VM configuration file (replace `100` with your VM ID):
-
-```bash
-nano /etc/pve/qemu-server/100.conf
-```
-
-Add this line (replace with your Vendor:Product ID):
-
-```
-usb0: host=0781:5583,usb3=1
-```
-
-For USB 2.0 devices, use:
-
-```
-usb0: host=0781:5583
-```
-
-To use USB port instead:
-
-```
-usb0: host=2-1,usb3=1
-```
-
-Save and exit (Ctrl+O, Enter, Ctrl+X).
-
-### Step 3: Configure Boot Order
-
-In the same configuration file, find or add the boot line:
-
-```
-boot: order=usb0;scsi0;ide2
-```
-
-This boots from `usb0` first, then `scsi0` (main disk), then `ide2` (CD-ROM).
-
-Save the file and start your VM:
-
-```bash
-qm start 100
-```
-
-## Method 3: Raw Disk Mapping (Alternative)
-
-If USB passthrough doesn't work, you can map the USB drive as a raw disk device.
-
-### Step 1: Identify the USB Device Path
-
-```bash
-lsblk
-```
-
-Output example:
-```
-NAME   MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT
-sda      8:0    0 238.5G  0 disk
-├─sda1   8:1    0   512M  0 part /boot/efi
-├─sda2   8:2    0     1G  0 part /boot
-└─sda3   8:3    0   237G  0 part
-sdb      8:16   1  14.9G  0 disk          <-- Your USB drive
-└─sdb1   8:17   1  14.9G  0 part
-```
-
-Identify your USB drive (e.g., `/dev/sdb`).
-
-> **Warning**: Make sure you have the correct device! Using the wrong device could cause data loss.
-
-### Step 2: Unmount the USB Drive
-
-If the USB is mounted, unmount it:
-
-```bash
-umount /dev/sdb1
-```
-
-### Step 3: Add Raw Disk to VM
-
-```bash
-qm set 100 -scsi1 /dev/sdb
-```
-
-Replace:
-- `100` with your VM ID
-- `scsi1` with an available SCSI slot (scsi1, scsi2, etc.)
-- `/dev/sdb` with your USB device path
-
-### Step 4: Configure Boot Order
-
-```bash
-qm set 100 -boot order=scsi1;scsi0
-```
-
-This boots from the USB (`scsi1`) before the main disk (`scsi0`).
-
-### Step 5: Start the VM
-
-```bash
-qm start 100
-```
-
-> **Warning**: With raw disk mapping, the USB drive must remain connected to the same device path. If you unplug and replug it, the path might change, causing boot failure.
 
 ## Configuring BIOS/UEFI Boot Settings
 
@@ -283,41 +178,6 @@ Should show USB device first (e.g., `boot: order=usb0;scsi0`).
 - Access BIOS/boot menu during startup (ESC/F12)
 - Manually select USB device
 
-### USB Device Disconnects or Doesn't Work
-
-**Check for USB power management issues**:
-
-On Proxmox host:
-```bash
-lsusb -t
-```
-
-This shows the USB tree. Ensure the device is on a USB 3.0 controller if it's a USB 3.0 device.
-
-**Disable USB autosuspend on host**:
-```bash
-echo -1 > /sys/module/usbcore/parameters/autosuspend
-```
-
-**Check VM has enough USB resources**:
-
-Add more USB controllers if needed:
-- VM → **Hardware** → **Add** → **USB Device**
-
-### Permission Errors
-
-If you see permission errors:
-
-```bash
-chown root:root /dev/bus/usb/*/*
-```
-
-```bash
-chmod 666 /dev/bus/usb/*/*
-```
-
-> **Warning**: This gives all users access to USB devices. Use with caution in multi-user environments.
-
 ### UEFI Firmware Won't Boot from USB
 
 Some USB drives don't have proper UEFI boot files. Try:
@@ -328,36 +188,6 @@ Some USB drives don't have proper UEFI boot files. Try:
    - Start VM
 
 2. Or recreate the USB with UEFI-compatible bootloader
-
-## Advanced: Persistent USB Passthrough
-
-To automatically pass through a USB device when it's plugged in:
-
-### Step 1: Create udev Rule
-
-```bash
-nano /etc/udev/rules.d/99-usb-passthrough.rules
-```
-
-Add this line (replace IDs and VM ID):
-
-```
-ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="0781", ATTR{idProduct}=="5583", RUN+="/usr/sbin/qm set 100 -usb0 host=0781:5583"
-```
-
-Save and exit.
-
-### Step 2: Reload udev Rules
-
-```bash
-udevadm control --reload-rules
-```
-
-```bash
-udevadm trigger
-```
-
-Now when you plug in that specific USB device, it automatically attaches to VM 100.
 
 ## Security Considerations
 
@@ -373,27 +203,6 @@ Now when you plug in that specific USB device, it automatically attaches to VM 1
 - **Test in isolated VMs** first
 - **Don't pass through system USB devices** (keyboard, mouse) unless necessary
 - **Unmount from host** before passing to VM to prevent conflicts
-
-## Alternative: Use ISO Instead
-
-If you only need to boot an installer and don't need the actual USB drive:
-
-### Convert USB to ISO
-
-On Proxmox host:
-
-```bash
-dd if=/dev/sdb of=/var/lib/vz/template/iso/usb-backup.iso bs=4M status=progress
-```
-
-Replace `/dev/sdb` with your USB device.
-
-Then use the ISO in your VM:
-1. VM → **Hardware** → **CD/DVD Drive**
-2. Select the ISO
-3. Configure boot order to boot from CD-ROM first
-
-> **Pro Tip**: This method is safer and more portable, but you lose USB-specific features (persistent storage on USB, USB hardware detection, etc.).
 
 ## Common Use Cases
 
