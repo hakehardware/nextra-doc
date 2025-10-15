@@ -32,9 +32,62 @@ Before starting, ensure you have:
 
 This method passes the entire USB device to the VM, allowing the VM to boot from it directly.
 
-### Step 1: Identify Your USB Device (Optional)
+### Step 1: VM Creation Setup
 
-First, plug in your USB drive to the Proxmox host and identify it:
+Before passing through your USB device, you need to create a VM with the correct settings for USB boot.
+
+#### Media Selection
+
+When creating the VM in Proxmox:
+
+1. At the **OS** tab, select **Do not use any media**
+2. This is important because you'll be booting from the USB device, not from an ISO or other media
+
+![VM OS tab - select "Do not use any media"](/photos/infrastructure/proxmox-usb-boot/no-media.png)
+
+#### Machine Type: Q35 vs i440fx
+
+**Q35 (Recommended for 2025)**:
+- ✅ Modern chipset with native PCIe support
+- ✅ Better USB 3.0 controller support
+- ✅ Future-proof (i440fx is deprecated in RHEL 10+)
+- ✅ Required for GPU/PCIe passthrough
+- ✅ Supports advanced features like vIOMMU
+- Best choice for: All new VMs, modern OSes, USB 3.0 devices
+
+**i440fx (Legacy)**:
+- ⚠️ Being phased out (deprecated in RHEL 10, old QEMU versions removed)
+- ⚠️ Only PCI support (no native PCIe)
+- ✅ Better compatibility with very old operating systems
+- Best choice for: Legacy systems, existing VMs that can't be migrated
+
+> **2025 Recommendation**: Use **Q35** for all new VMs. It's the modern standard and provides better hardware support.
+
+#### System Firmware: UEFI vs SeaBIOS
+
+**UEFI/OVMF (Recommended for 2025)**:
+- ✅ Modern standard supported by all current Linux distros (Ubuntu, Fedora, Debian, etc.)
+- ✅ Works with modern USB creation tools (YUMI exFAT, Ventoy, etc.)
+- ✅ Advanced security features (Secure Boot when needed)
+- ✅ Better compatibility with GPT, large disks (>2TB)
+- ✅ Required for Windows 11 and modern OS features
+- **Critical**: Disable **Pre-Enroll keys** to avoid boot issues (see below)
+- Best choice for: All modern OSes, current installers, future-proofing
+
+**SeaBIOS (Legacy Fallback)**:
+- ✅ Works with very old bootable USB drives
+- ✅ Simpler boot process
+- ✅ Good fallback if UEFI boot fails
+- ⚠️ Legacy BIOS - older technology
+- Best choice for: Troubleshooting, very old USB boot media, legacy software
+
+> **Pre-Enroll Keys (CRITICAL)**: When using UEFI, you **MUST disable Pre-Enroll keys** in the System settings. This option enables Secure Boot, which will prevent most bootable USB drives from booting since they aren't signed with Microsoft keys. Keep it **OFF** unless you have specific Secure Boot requirements.
+
+> **2025 Recommendation**: Use **Q35 + UEFI (OVMF)** with Pre-Enroll keys disabled. This is the modern, future-proof configuration that works with all current Linux distros and installation media.
+
+### Step 2: Identify Your USB Device (Optional)
+
+First, plug in your USB drive to the Proxmox host and identify it using the Proxmox shell with:
 
 ```bash
 lsusb
@@ -48,7 +101,7 @@ Note the **Bus number** and **Device number** (e.g., Bus 002 Device 004).
 
 Also note the **Vendor ID** and **Product ID** (e.g., `0781:5581`).
 
-### Step 2: Add USB Device to VM (Web Interface)
+### Step 3: Add USB Device to VM (Web Interface)
 
 ![add usb device](/photos/infrastructure/proxmox-usb-boot/add-usb-device.png)
 
@@ -78,7 +131,7 @@ Also note the **Vendor ID** and **Product ID** (e.g., `0781:5581`).
 
 > **Pro Tip**: Using **Vendor/Device ID** is better because the device will work even if you plug it into a different USB port. Using **USB Port** ties the mapping to a specific physical port.
 
-### Step 3: Configure VM Boot Order
+### Step 4: Configure VM Boot Order
 
 Now configure the VM to boot from the USB device:
 
@@ -95,7 +148,7 @@ Now configure the VM to boot from the USB device:
 
 {/* Add screenshot: Boot order configuration */}
 
-### Step 4: Start the VM
+### Step 5: Start the VM
 
 1. Click **Start** on your VM
 2. Click **Console** to view the display
