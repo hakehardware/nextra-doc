@@ -6,18 +6,21 @@ title: Proxmox Post-Install Script
 
 Automate essential Proxmox VE post-installation tasks with a single community-maintained script. This eliminates manual configuration and gets your system production-ready in minutes.
 
-> **Version Reference**: This guide covers **Proxmox VE 8.x** (Debian 12 "Bookworm") and **Proxmox VE 9.0** (Debian 13 "Trixie"). The script automatically detects your version and uses the appropriate configuration method.
+> **Version Reference**: This guide is updated for **Proxmox VE 9.0-1** (Debian 13 "Trixie") released August 5, 2025. The script also supports Proxmox VE 8.x, automatically detecting your version and using the appropriate repository format (deb822 for PVE 9, legacy format for PVE 8).
 
 ## What is the Post-Install Script?
 
 The [Proxmox VE Post Install Script](https://community-scripts.github.io/ProxmoxVE/scripts?id=post-pve-install) is a community-maintained tool that automates common post-installation tasks. Created by @tteck and now maintained by the community, it handles repository configuration, system updates, and quality-of-life improvements automatically.
+
+> **New in PVE 9**: The script was updated to support Debian 13 "Trixie" with the modern deb822 repository format, ensuring proper package source configuration for fresh PVE 9.0 installations.
 
 ## What It Does
 
 The script performs several essential configurations:
 
 ### Repository Management
-- **Corrects Proxmox VE sources** - Configures correct Debian package repositories
+- **Corrects Proxmox VE sources** - Configures correct Debian package repositories using modern deb822 format (PVE 9) or legacy format (PVE 8)
+- **Enables non-free-firmware component** - Required for microcode updates (enabled by default in PVE 9)
 - **Disables Enterprise Repository** - Removes or disables the subscription-only repo
 - **Enables No-Subscription Repository** - Adds the free community repo
 - **Configures Ceph repositories** - Adds disabled Ceph repos for future use
@@ -29,6 +32,20 @@ The script performs several essential configurations:
 - **Updates System Packages** - Runs full system update and upgrade
 - **Offers Reboot** - Prompts to reboot to apply all changes
 
+## When to Use This Script
+
+### Perfect For
+- **Fresh Proxmox installations** - Run immediately after installing Proxmox
+- **Homelab setups** - Non-production environments without enterprise subscriptions
+- **Quick deployment** - When you want to get up and running fast
+- **Learning environments** - Students and hobbyists exploring Proxmox
+
+### Consider Manual Configuration
+- **Enterprise environment** - You have a Proxmox subscription
+- **Production systems** - You need full control over every change
+- **Custom repository needs** - You use specific package sources
+- **Learning purposes** - You want to understand each step
+
 ## Quick Start
 
 ### Running the Script
@@ -36,81 +53,99 @@ The script performs several essential configurations:
 1. After Proxmox installation, log into the web interface at `https://YOUR-IP:8006`
 2. Click on your node name in the left sidebar
 3. Click **Shell** to open the terminal
-4. Run the following command:
 
-```sh
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/tools/pve/post-pve-install.sh)"
-```
+![open shell](/photos/infrastructure/proxmox-post-install/open-shell.png)
 
-![script start](/photos/infrastructure/proxmox-post-install/script-start.png)
+4. Grab the install command from the [PVE Post Install](https://community-scripts.github.io/ProxmoxVE/scripts?id=post-pve-install) page.
+
+![copy-install-script](/photos/infrastructure/proxmox-post-install/copy-install-script.png)
+
+Then paste it in the shell
+
+![run-script](/photos/infrastructure/proxmox-post-install/run-script.png)
 
 ### Interactive Prompts
 
 The script will ask you several questions. The exact questions depend on your current configuration:
 
+Start by typing `y` and hitting enter to start the Proxmox VE Post Install Script
+
+![start-script](/photos/infrastructure/proxmox-post-install/start-script.png)
+
+You may see a notice about using Modern deb822 sources
+
+![modern-sources](/photos/infrastructure/proxmox-post-install/modern-sources.png)
+
 #### Repository Configuration
 
-1. **Correct Proxmox VE sources?** - Choose `yes`
-   - Updates package sources to the correct Debian repositories
+1. **'pve-enterprise' repository already exists. What do you want to do?**
+   - disable for homelab, enterprise repo requires a subscription
 
-2. **Disable 'pve-enterprise' repository?** - Choose `yes` for homelab
-   - The enterprise repository requires a Proxmox subscription
+![disable-pve-enterprise](/photos/infrastructure/proxmox-post-install/disable-pve-enterprise.png)
 
-3. **Enable 'pve-no-subscription' repository?** - Choose `yes`
-   - Provides access to all open-source Proxmox components
+2. **'ceph enterprise'repository already exists. What do you want to do?**
+   - disable unless you intend to use ceph (most do not)
 
-4. **Correct 'ceph package sources'?** - Choose `yes`
-   - Adds (disabled) Ceph repositories for future use
+![disable-ceph](/photos/infrastructure/proxmox-post-install/disable-ceph.png)
 
-5. **Add (Disabled) 'pvetest' repository?** - Choose `yes`
+3. **Add 'pve-no-subscription' repository (deb822)?**
+   - Choose OK. Provides access to all open-source Proxmox components
+
+![add-pve-no-sub](/photos/infrastructure/proxmox-post-install/add-pve-no-sub.png)
+
+4. **Add (Disabled) 'pvetest' repository (deb822)?** - Choose `yes`
    - Adds the testing repository (disabled by default)
    - You can enable it later if you want bleeding-edge features
 
+![add-test](/photos/infrastructure/proxmox-post-install/add-test.png)
+
 #### System Configuration
 
-6. **Disable subscription nag?** - Choose `yes`
-   - Removes the "No valid subscription" popup from the web interface
+5. **Disable subscription nag?**
+   - Choose `yes` then `OK`. Removes the "No valid subscription" popup from the web interface
 
-7. **Disable High Availability** (conditional):
-   - If HA **is running**: "Disable high availability?" - Choose `yes` for single-node setups
+![disable-nag](/photos/infrastructure/proxmox-post-install/disable-nag.png)
 
-8. **Disable Corosync?** (only if disabling HA) - Choose `yes` for single-node
+Then click `OK` to proceed.
+
+![support-subs](/photos/infrastructure/proxmox-post-install/support-subs.png)
+
+6. **Disable High Availability**:
+   - Choose `yes` then `OK` if you will not be using high availability (most people)
+
+![high-avail](/photos/infrastructure/proxmox-post-install/high-avail.png)
+
+7. **Disable Corosync?**
+   - Choose `yes` and then `OK` if not using high availability.
    - Corosync is the cluster communication layer
    - Only needed for multi-node Proxmox clusters
    - Safe to disable on standalone servers
 
-9. **Update Proxmox VE?** - Choose `yes` (recommended)
+![corosync](/photos/infrastructure/proxmox-post-install/corosync.png)
+
+8. **Update Proxmox VE?** - 
+   - Choose `yes` then `OK`.
    - Runs `apt update` and `apt dist-upgrade` to update all packages
 
-10. **Reboot Proxmox VE?** - Choose `yes`
-    - Recommended to apply all updates
+![update](/photos/infrastructure/proxmox-post-install/update.png)
+
+This may take some time as it downloads and applies the latest updates.
+
+![updating](/photos/infrastructure/proxmox-post-install/updating.png)
+
+Read and accept the notice:
+
+![post-install-reminder](/photos/infrastructure/proxmox-post-install/post-install-reminder.png)
+
+9. **Reboot Proxmox VE?** 
+   - Choose `yes` then `OK`
+   - Recommended to apply all updates
+
+![reboot](/photos/infrastructure/proxmox-post-install/reboot.png)
+
+You can now close the shell and wait a few minutes before refreshing the Web UI with "CTRL+SHIFT+R". 
 
 > **Pro Tip**: For most homelab users with a single-node setup, answer `yes` to all questions. This will configure your system with the community repositories and optimize it for standalone use.
-
-## Advanced Options
-
-### Running Non-Interactively
-
-If you want to automate the script with pre-set answers:
-
-```sh
-# Example: Accept all defaults automatically (not recommended for first-time users)
-yes | bash -c "$(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/tools/pve/post-pve-install.sh)"
-```
-
-## When to Use This Script
-
-### ✅ Perfect For:
-- **Fresh Proxmox installations** - Run immediately after installing Proxmox
-- **Homelab setups** - Non-production environments without enterprise subscriptions
-- **Quick deployment** - When you want to get up and running fast
-- **Learning environments** - Students and hobbyists exploring Proxmox
-
-### ⚠️ Consider Manual Configuration If:
-- **Enterprise environment** - You have a Proxmox subscription
-- **Production systems** - You need full control over every change
-- **Custom repository needs** - You use specific package sources
-- **Learning purposes** - You want to understand each step
 
 ## Community Scripts Collection
 

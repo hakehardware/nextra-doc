@@ -6,23 +6,25 @@ title: Installing Proxmox VE
 
 A straightforward guide to installing Proxmox Virtual Environment on bare metal hardware. This guide covers the essentials to get you up and running quickly.
 
-> **Version Reference**: This guide is written for **Proxmox VE 8.3/8.4** (based on Debian 12 "Bookworm"). The installation process is similar across versions, but UI elements and default options may vary in future releases.
+> **Version Reference**: This guide is written for **Proxmox VE 9.0-1** (based on Debian 13 "Trixie"). Released August 5, 2025, this version includes Linux kernel 6.14.8-2, QEMU 10.0.2, and ZFS 2.3.3.
 
 ## What You'll Need
 
 - **Hardware**: 64-bit x86 CPU with virtualization support (Intel VT-x or AMD-V)
-- **RAM**: Minimum 2GB (4GB+ recommended for running VMs)
-- **Storage**: At least 32GB (SSD strongly recommended)
+- **RAM**: Minimum 2GB for OS (additional RAM needed for VMs/containers)
+- **Storage**: At least 32GB (SSD strongly recommended; for ZFS add ~1GB RAM per TB of storage)
 - **Network**: One network interface (multiple recommended for advanced setups)
-- **USB Drive**: 4GB+ for installation media
+- **USB Drive**: 2GB+ for installation media (ISO is 1.64GB)
 
 > **Pro Tip**: Check that virtualization is enabled in your BIOS/UEFI before starting. Look for settings like "Intel VT-x", "AMD-V", or "Virtualization Technology".
 
 ## Step 1: Download Proxmox VE
 
 1. Visit the [Proxmox Download Page](https://www.proxmox.com/en/downloads/proxmox-virtual-environment/iso)
-2. Download the latest Proxmox VE ISO Installer
-3. Verify the checksum (optional but recommended)
+2. Download the **Proxmox VE 9.0-1 ISO Installer** (1.64GB)
+3. Verify the SHA256 checksum
+
+> **Pro Tip**: Torrent download is also available for faster downloads with resume capability.
 
 ## Step 2: Create Installation Media
 
@@ -36,23 +38,7 @@ Use [Rufus](https://rufus.ie/) or [balenaEtcher](https://www.balena.io/etcher/):
 ### On Linux
 ```sh
 # Replace /dev/sdX with your USB device (check with lsblk)
-sudo dd if=proxmox-ve_*.iso of=/dev/sdX bs=1M status=progress
-```
-
-### On macOS
-```sh
-# Find your USB device
-diskutil list
-```
-
-```sh
-# Unmount the USB drive (replace N with disk number)
-diskutil unmountDisk /dev/diskN
-```
-
-```sh
-# Write the ISO (replace N with disk number)
-sudo dd if=proxmox-ve_*.iso of=/dev/rdiskN bs=1m
+sudo dd bs=1M conv=fdatasync if=proxmox-ve_*.iso of=/dev/sdX status=progress
 ```
 
 > **Pro Tip**: Double-check your device path with `lsblk` or `diskutil list` - writing to the wrong device will destroy your data!
@@ -71,16 +57,18 @@ sudo dd if=proxmox-ve_*.iso of=/dev/rdiskN bs=1m
 When the installer boots, you'll see several options. Select:
 - **Install Proxmox VE (Graphical)** - Recommended for most users
 
-![graphical](/photos/infrastructure/proxmox-installation/graphical.png)
+![graphical](/photos/infrastructure/proxmox-installation/pve9-welcome.png)
 
 Once loaded, accept the EULA to continue.
 
+![eula](/photos/infrastructure/proxmox-installation/pve9-eula.png)
+
 ### Select Target Disk
-If you're new to Proxmox, start with **ext4**. You can always add additional storage with ZFS later.
+If you're new to Proxmox, start with **ext4** (default). You can always add additional storage with ZFS later.
 
 > **Warning**: All data on the selected disk will be **permanently erased**!
 
-![target harddisk](/photos/infrastructure/proxmox-installation/target-harddisk.png)
+![target harddisk](/photos/infrastructure/proxmox-installation/pve9-disk.png)
 
 ### Configure Location & Time
 
@@ -88,16 +76,16 @@ If you're new to Proxmox, start with **ext4**. You can always add additional sto
 2. Choose your **Time zone**
 3. Select your **Keyboard Layout**
 
-![time](/photos/infrastructure/proxmox-installation/time.png)
+![pve9 time](/photos/infrastructure/proxmox-installation/pve9-time.png)
 
 ### Set Administrator Password
 
-1. Enter a strong password for the **root** account
+1. Enter a strong password for the **root** account (minimum 8 characters, 12+ recommended)
 2. Provide an **email address** for system notifications
 
 > **Pro Tip**: This email receives important system alerts. Use a real address you check regularly, or set up email forwarding later.
 
-![password](/photos/infrastructure/proxmox-installation/password.png)
+![password](/photos/infrastructure/proxmox-installation/pve9-password.png)
 
 ### Network Configuration
 
@@ -105,33 +93,37 @@ For many people this is the hardest to know what to select.
 
 1. **Management Interface**: Select your primary network interface. Typically it is autoselected, and there should be a green dot if active which is a good sign everything is working.
 2. **Hostname**: This does not matter too much. Give your server a meaningful name (e.g., `pve1.internal`)
-3. **IP Address**: Choose between:
-   - **DHCP**: Automatic (easier but IP may change)
-   - **Static**: Manual (recommended, but must not already be in use, and it is a good idea to reserve this on your router as well)
+3. **IP Address**: Enter the chosen static IP for the server.
 4. **Gateway**: Your router's IP address (usually `192.168.1.1`)
 5. **DNS Server**: Use your router's IP or public DNS (e.g., `8.8.8.8`)
 
 > **Pro Tip**: Use a **static IP** for your Proxmox host. Document this IP - you'll need it to access the web interface!
 
-![network](/photos/infrastructure/proxmox-installation/network.png)
+![network](/photos/infrastructure/proxmox-installation/pve9-network.png)
 
 ### Review & Install
 
 1. Review all settings
 2. Click **Install**
+
+![review](/photos/infrastructure/proxmox-installation/pve9-review.png)
+
 3. Wait for installation (usually 5-10 minutes)
+
+![installation](/photos/infrastructure/proxmox-installation/pve9-installation.png)
+
 4. Remove USB drive when prompted
 5. Reboot
 
 When the host boots up you should see the boot menu. It should have the correct option selected and will proceed automatically
 
-![boot menu](/photos/infrastructure/proxmox-installation/boot-menu.png)
+![boot menu](/photos/infrastructure/proxmox-installation/pve9-first-boot.png)
 
 Once the system boots up you will see a login screen with the IP listed.
 
-![host login](/photos/infrastructure/proxmox-installation/host-login.png)
+![host login](/photos/infrastructure/proxmox-installation/pve9-cli-login.png)
 
-You do not need to log in via the terminal.
+You do not need to log in via the terminal. All future actions should take place through the Proxmox Web user interface.
 
 ## Step 5: Access Proxmox Web Interface
 
@@ -139,30 +131,38 @@ You do not need to log in via the terminal.
 2. Navigate to: `https://YOUR-PROXMOX-IP:8006`
    - Example: `https://192.168.1.100:8006`
 3. Accept the self-signed certificate warning (this is normal)
+
+![self-signed certificate warning](/photos/infrastructure/proxmox-installation/pve9-warning.png)
+
 4. Login with:
    - **Username**: `root`
    - **Realm**: `Linux PAM standard authentication`
    - **Password**: The password you set during installation
 
-![login](/photos/infrastructure/proxmox-installation/login.png)
+![login](/photos/infrastructure/proxmox-installation/pve9-web-login.png)
 
 > **Pro Tip**: Bookmark this URL! You'll access it frequently.
 
+5. Click "OK" when the subscription prompt appears. Do not worry, Proxmox is free!
+
+![subscription prompt](/photos/infrastructure/proxmox-installation/pve9-sub.png)
+
 ## Post-Installation: Essential Tasks
-
-Check out the [Post-Install Script](/infrastructure/proxmox-post-install) that handles repository configuration, updates, and subscription nag removal automatically with a single command!
-
-## Next Steps
 
 Now that Proxmox is installed, here's what to do next:
 
-1. **[Run the Post-Install Script](/infrastructure/proxmox-post-install)** - Automate repository configuration, updates, and subscription nag removal with a single command
-2. **[Getting Started with Proxmox](/infrastructure/proxmox-getting-started)** - Learn how to create VMs, containers, manage storage, and perform essential tasks
+1. **[Run the Post-Install Script](/infrastructure/proxmox-post-install)** - Automate repository configuration, updates, and subscription nag removal with a single command (HIGHLY RECOMMENDED)
+2. **[Getting Started with Proxmox](/infrastructure/proxmox-getting-started)** - Get familiar with the user interface 
 
-Additional tasks you can explore:
-- **Configure storage**: Add additional drives or network storage
-- **Set up backups**: Configure automated backup schedules
-- **Explore clustering**: Connect multiple Proxmox hosts (advanced)
+## What's New in Proxmox VE 9.0
+
+Major features introduced in version 9.0:
+
+- **LVM Snapshot Support**: Snapshots now available for VMs on thick-provisioned LVM storage
+- **SDN Fabrics**: Simplified configuration for complex routed networks with automatic failover
+- **ZFS RAIDZ Expansion**: Add devices to existing RAIDZ pools with minimal downtime
+- **Network Interface Pinning**: Prevent interface name changes after upgrades
+- **Modernized Mobile Interface**: Rebuilt using Rust-based Yew framework
 
 ## Official Documentation
 
@@ -171,23 +171,4 @@ This guide covers the basics to get you started quickly. For advanced topics, co
 - **[Proxmox VE Installation Guide](https://pve.proxmox.com/pve-docs/chapter-pve-installation.html)** - Comprehensive installation documentation
 - **[Proxmox VE Administration Guide](https://pve.proxmox.com/pve-docs/pve-admin-guide.html)** - Complete system administration reference
 - **[Proxmox VE Wiki](https://pve.proxmox.com/wiki/Main_Page)** - Community-maintained documentation and tutorials
-
-## Troubleshooting
-
-### Can't Access Web Interface
-- Verify the IP address with `ip addr show` in the server console
-- Check firewall rules: `iptables -L`
-- Ensure port 8006 isn't blocked by your network firewall
-
-### Virtualization Not Working
-- Verify virtualization is enabled in BIOS: `egrep -c '(vmx|svm)' /proc/cpuinfo` (should return > 0)
-- Reboot and enable VT-x/AMD-V in BIOS settings
-
-### Installation Fails
-- Verify ISO checksum - corrupt download is a common issue
-- Try different USB creation tools (Rufus DD mode vs Etcher)
-- Check hardware compatibility on the Proxmox forums
-
----
-
-**Ready to optimize your installation?** Follow the [Post-Install Script](/infrastructure/proxmox-post-install) guide, then check out [Getting Started with Proxmox](/infrastructure/proxmox-getting-started) to create your first VM!
+- **[What's New in Proxmox VE 9.0](https://www.proxmox.com/en/services/training-courses/videos/proxmox-virtual-environment/whats-new-in-proxmox-ve-9-0)** - Official overview of new features
