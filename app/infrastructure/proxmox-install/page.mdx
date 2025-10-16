@@ -34,23 +34,23 @@ Use [Rufus](https://rufus.ie/) or [balenaEtcher](https://www.balena.io/etcher/):
 - Click Start
 
 ### On Linux
-```bash
+```sh
 # Replace /dev/sdX with your USB device (check with lsblk)
 sudo dd if=proxmox-ve_*.iso of=/dev/sdX bs=1M status=progress
 ```
 
 ### On macOS
-```bash
+```sh
 # Find your USB device
 diskutil list
 ```
 
-```bash
+```sh
 # Unmount the USB drive (replace N with disk number)
 diskutil unmountDisk /dev/diskN
 ```
 
-```bash
+```sh
 # Write the ISO (replace N with disk number)
 sudo dd if=proxmox-ve_*.iso of=/dev/rdiskN bs=1m
 ```
@@ -154,10 +154,12 @@ Check out the [Post-Install Script](/infrastructure/proxmox-post-install) that h
 
 ## Next Steps
 
-Now that Proxmox is installed, you can:
+Now that Proxmox is installed, here's what to do next:
 
-- **Create your first VM**: Upload an ISO and create a virtual machine
-- **Set up LXC containers**: Lightweight containers for services
+1. **[Run the Post-Install Script](/infrastructure/proxmox-post-install)** - Automate repository configuration, updates, and subscription nag removal with a single command
+2. **[Getting Started with Proxmox](/infrastructure/proxmox-getting-started)** - Learn how to create VMs, containers, manage storage, and perform essential tasks
+
+Additional tasks you can explore:
 - **Configure storage**: Add additional drives or network storage
 - **Set up backups**: Configure automated backup schedules
 - **Explore clustering**: Connect multiple Proxmox hosts (advanced)
@@ -188,4 +190,4 @@ This guide covers the basics to get you started quickly. For advanced topics, co
 
 ---
 
-**Ready to create your first VM?** Check out our VM creation guides in this section!
+**Ready to optimize your installation?** Follow the [Post-Install Script](/infrastructure/proxmox-post-install) guide, then check out [Getting Started with Proxmox](/infrastructure/proxmox-getting-started) to create your first VM!

@@ -132,24 +132,24 @@ After OS installation:
 **Install QEMU Guest Agent** (recommended):
 
 For **Ubuntu/Debian**:
-```bash
+```sh
 sudo apt update
 ```
 
-```bash
+```sh
 sudo apt install qemu-guest-agent -y
 ```
 
-```bash
+```sh
 sudo systemctl start qemu-guest-agent
 ```
 
 For **CentOS/Rocky/Alma**:
-```bash
+```sh
 sudo dnf install qemu-guest-agent -y
 ```
 
-```bash
+```sh
 sudo systemctl start qemu-guest-agent
 ```
 
@@ -238,15 +238,15 @@ To make a container privileged:
 3. Uncheck it (requires container shutdown)
 
 **For Docker in LXC**:
-```bash
+```sh
 apt update
 ```
 
-```bash
+```sh
 apt install curl -y
 ```
 
-```bash
+```sh
 curl -fsSL https://get.docker.com | sh
 ```
 
@@ -294,11 +294,11 @@ By default, Proxmox creates **vmbr0** which bridges to your physical network int
 ### Viewing Network Configuration
 
 In the shell:
-```bash
+```sh
 ip addr show
 ```
 
-```bash
+```sh
 cat /etc/network/interfaces
 ```
 
@@ -378,11 +378,11 @@ To schedule regular backups:
 ### Updating Proxmox
 
 From the shell:
-```bash
+```sh
 apt update
 ```
 
-```bash
+```sh
 apt dist-upgrade -y
 ```
 
@@ -424,50 +424,50 @@ Or from the UI:
 Access the shell by clicking your node → **Shell**, then use these commands:
 
 **List all VMs and containers**:
-```bash
+```sh
 qm list
 ```
 
-```bash
+```sh
 pct list
 ```
 
 **Start a VM** (replace 100 with VM ID):
-```bash
+```sh
 qm start 100
 ```
 
 **Start a container** (replace 100 with CT ID):
-```bash
+```sh
 pct start 100
 ```
 
 **Check Proxmox version**:
-```bash
+```sh
 pveversion
 ```
 
 **Check cluster status** (for multi-node setups):
-```bash
+```sh
 pvecm status
 ```
 
 **Monitor system resources**:
-```bash
+```sh
 htop
 ```
 
 **Check disk usage**:
-```bash
+```sh
 df -h
 ```
 
 **View running VMs/containers**:
-```bash
+```sh
 qm list | grep running
 ```
 
-```bash
+```sh
 pct list | grep running
 ```
 

@@ -6,7 +6,7 @@ title: Proxmox Post-Install Script
 
 Automate essential Proxmox VE post-installation tasks with a single community-maintained script. This eliminates manual configuration and gets your system production-ready in minutes.
 
-> **Version Reference**: This guide is written for **Proxmox VE 8.3/8.4** (based on Debian 12 "Bookworm"). The script is regularly maintained by the community and works across multiple Proxmox versions.
+> **Version Reference**: This guide covers **Proxmox VE 8.x** (Debian 12 "Bookworm") and **Proxmox VE 9.0** (Debian 13 "Trixie"). The script automatically detects your version and uses the appropriate configuration method.
 
 ## What is the Post-Install Script?
 
@@ -17,16 +17,17 @@ The [Proxmox VE Post Install Script](https://community-scripts.github.io/Proxmox
 The script performs several essential configurations:
 
 ### Repository Management
-- **Disables Enterprise Repository** - Removes the subscription-only repo
+- **Corrects Proxmox VE sources** - Configures correct Debian package repositories
+- **Disables Enterprise Repository** - Removes or disables the subscription-only repo
 - **Enables No-Subscription Repository** - Adds the free community repo
-- **Optionally adds Test Repository** - For users who want bleeding-edge updates
-- **Optionally adds Ceph Repository** - For Ceph storage users
+- **Configures Ceph repositories** - Adds disabled Ceph repos for future use
+- **Adds Test Repository** - Adds the pvetest repo (disabled by default)
 
 ### System Improvements
-- **Updates System Packages** - Brings everything up to date
-- **Disables Subscription Nag** - Removes the "No valid subscription" popup
-- **Updates LXC Templates** - Refreshes the container template list
-- **Disables High Availability** (optional) - For single-node setups
+- **Disables Subscription Nag** - Removes the "No valid subscription" popup in both web and mobile UI
+- **Optimizes for Single-Node** (optional) - Disables High Availability and Corosync services to save resources
+- **Updates System Packages** - Runs full system update and upgrade
+- **Offers Reboot** - Prompts to reboot to apply all changes
 
 ## Quick Start
 
@@ -37,58 +38,54 @@ The script performs several essential configurations:
 3. Click **Shell** to open the terminal
 4. Run the following command:
 
-```bash
-bash -c "$(wget -qLO - https://github.com/community-scripts/ProxmoxVE/raw/main/misc/post-pve-install.sh)"
+```sh
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/tools/pve/post-pve-install.sh)"
 ```
 
-{/* Add screenshot: Running the post-install script */}
+![script start](/photos/infrastructure/proxmox-post-install/script-start.png)
 
 ### Interactive Prompts
 
-The script will ask you several questions:
+The script will ask you several questions. The exact questions depend on your current configuration:
 
-1. **Correct Proxmox VE sources?** - Choose `y` (yes)
-2. **Disable Enterprise Repository?** - Choose `y` (yes for homelab)
-3. **Enable No-Subscription Repository?** - Choose `y` (yes)
-4. **Add PVETest Repository?** - Choose `n` (no, unless you want beta features)
-5. **Enable Ceph Repository?** - Choose `y` only if you plan to use Ceph storage
-6. **Disable Subscription Nag?** - Choose `y` (yes)
-7. **Update Proxmox VE?** - Choose `y` (yes, recommended)
-8. **Reboot Proxmox VE?** - Choose `y` after updates complete
+#### Repository Configuration
 
-> **Pro Tip**: For most homelab users, answer `y` to everything except "Add PVETest Repository" and possibly "Enable Ceph Repository".
+1. **Correct Proxmox VE sources?** - Choose `yes`
+   - Updates package sources to the correct Debian repositories
 
-## What This Replaces
+2. **Disable 'pve-enterprise' repository?** - Choose `yes` for homelab
+   - The enterprise repository requires a Proxmox subscription
 
-This script automates the manual steps you'd otherwise perform:
+3. **Enable 'pve-no-subscription' repository?** - Choose `yes`
+   - Provides access to all open-source Proxmox components
 
-### Without the Script (Manual)
-```bash
-# Disable enterprise repository
-echo "# deb https://enterprise.proxmox.com/debian/pve bookworm pve-enterprise" > /etc/apt/sources.list.d/pve-enterprise.list
-```
+4. **Correct 'ceph package sources'?** - Choose `yes`
+   - Adds (disabled) Ceph repositories for future use
 
-```bash
-# Enable no-subscription repository
-echo "deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription" > /etc/apt/sources.list.d/pve-no-subscription.list
-```
+5. **Add (Disabled) 'pvetest' repository?** - Choose `yes`
+   - Adds the testing repository (disabled by default)
+   - You can enable it later if you want bleeding-edge features
 
-```bash
-# Update and upgrade
-apt update && apt dist-upgrade -y
-```
+#### System Configuration
 
-```bash
-# Disable subscription nag
-sed -Ezi.bak "s/(Ext.Msg.show\(\{\s+title: gettext\('No valid sub)/void\(\{ \/\/\1/g" /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
-systemctl restart pveproxy.service
-```
+6. **Disable subscription nag?** - Choose `yes`
+   - Removes the "No valid subscription" popup from the web interface
 
-### With the Script (Automated)
-```bash
-bash -c "$(wget -qLO - https://github.com/community-scripts/ProxmoxVE/raw/main/misc/post-pve-install.sh)"
-# Answer the prompts and you're done!
-```
+7. **Disable High Availability** (conditional):
+   - If HA **is running**: "Disable high availability?" - Choose `yes` for single-node setups
+
+8. **Disable Corosync?** (only if disabling HA) - Choose `yes` for single-node
+   - Corosync is the cluster communication layer
+   - Only needed for multi-node Proxmox clusters
+   - Safe to disable on standalone servers
+
+9. **Update Proxmox VE?** - Choose `yes` (recommended)
+   - Runs `apt update` and `apt dist-upgrade` to update all packages
+
+10. **Reboot Proxmox VE?** - Choose `yes`
+    - Recommended to apply all updates
+
+> **Pro Tip**: For most homelab users with a single-node setup, answer `yes` to all questions. This will configure your system with the community repositories and optimize it for standalone use.
 
 ## Advanced Options
 
@@ -96,28 +93,10 @@ bash -c "$(wget -qLO - https://github.com/community-scripts/ProxmoxVE/raw/main/m
 
 If you want to automate the script with pre-set answers:
 
-```bash
+```sh
 # Example: Accept all defaults automatically (not recommended for first-time users)
-yes | bash -c "$(wget -qLO - https://github.com/community-scripts/ProxmoxVE/raw/main/misc/post-pve-install.sh)"
+yes | bash -c "$(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/tools/pve/post-pve-install.sh)"
 ```
-
-### Verifying Repository Configuration
-
-After running the script, verify your repositories:
-
-```bash
-cat /etc/apt/sources.list.d/pve-enterprise.list
-```
-
-```bash
-cat /etc/apt/sources.list.d/pve-no-subscription.list
-```
-
-```bash
-apt update
-```
-
-You should see the enterprise repository commented out (or disabled) and the no-subscription repository active.
 
 ## When to Use This Script
 
@@ -132,45 +111,6 @@ You should see the enterprise repository commented out (or disabled) and the no-
 - **Production systems** - You need full control over every change
 - **Custom repository needs** - You use specific package sources
 - **Learning purposes** - You want to understand each step
-
-## Troubleshooting
-
-### Script Fails to Download
-If the wget command fails:
-
-```bash
-apt update && apt install wget -y
-```
-
-Or use curl instead:
-
-```bash
-bash -c "$(curl -fsSL https://github.com/community-scripts/ProxmoxVE/raw/main/misc/post-pve-install.sh)"
-```
-
-### Subscription Nag Still Appears
-If the subscription popup persists after running the script:
-
-```bash
-systemctl restart pveproxy.service
-```
-
-Then clear your browser cache and reload the page.
-
-### Repository Errors After Running
-If you see repository errors:
-
-```bash
-ls -la /etc/apt/sources.list.d/
-```
-
-```bash
-apt update
-```
-
-## Alternative: Manual Configuration
-
-Prefer to configure manually? See the [main installation guide](/infrastructure/proxmox-install#post-installation-essential-tasks) for step-by-step manual configuration instructions.
 
 ## Community Scripts Collection
 
@@ -197,11 +137,13 @@ These scripts are:
 
 After running the post-install script:
 
-1. **Create your first VM or LXC container**
-2. **Configure storage** - Add additional drives or network storage
-3. **Set up backups** - Configure automated backup schedules
-4. **Explore the community scripts** - Find pre-built containers for services you want to run
+1. **[Get Started with Proxmox](/infrastructure/proxmox-getting-started)** - Learn how to create VMs, containers, manage storage, and perform essential tasks
+2. **Create your first VM** - Upload an ISO and create a virtual machine
+3. **Create your first LXC container** - Deploy a lightweight Linux container
+4. **Configure additional storage** (optional) - Add extra drives, NFS shares, or network storage as needed
+5. **Set up backups** - Use Proxmox Backup Server (recommended) or configure built-in backups to NFS/local storage
+6. **[Explore the community scripts](https://community-scripts.github.io/ProxmoxVE/)** - Find pre-built containers for services you want to run
 
 ---
 
-**Want to understand what each setting does manually?** Check out the [detailed post-installation section](/infrastructure/proxmox-install#post-installation-essential-tasks) in the main installation guide.
+**Ready to start using Proxmox?** Check out the [Getting Started Guide](/infrastructure/proxmox-getting-started) to create your first VM!

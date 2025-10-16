@@ -89,7 +89,7 @@ When creating the VM in Proxmox:
 
 First, plug in your USB drive to the Proxmox host and identify it using the Proxmox shell with:
 
-```bash
+```sh
 lsusb
 ```
 
@@ -189,28 +189,28 @@ In the BIOS/UEFI menu:
 ### USB Device Not Showing in VM
 
 **Check USB passthrough is enabled**:
-```bash
+```sh
 dmesg | grep -i usb
 ```
 
 **Verify device is recognized by host**:
-```bash
+```sh
 lsusb
 ```
 
-```bash
+```sh
 ls -l /dev/bus/usb/*/*
 ```
 
 **Check VM configuration**:
-```bash
+```sh
 cat /etc/pve/qemu-server/100.conf | grep usb
 ```
 
 **Ensure VM has USB controller**:
 
 Edit VM → **Hardware** tab. You should see a USB controller. If not, add one:
-```bash
+```sh
 qm set 100 -usb0 host=0000:0000
 ```
 
@@ -221,7 +221,7 @@ qm set 100 -usb0 host=0000:0000
 2. Ensure USB device is enabled and first in the list
 
 **Or via command line**:
-```bash
+```sh
 grep boot /etc/pve/qemu-server/100.conf
 ```
 
@@ -288,47 +288,47 @@ For USB-based portable operating systems:
 ## Useful Commands Reference
 
 **List USB devices**:
-```bash
+```sh
 lsusb
 ```
 
 **List USB tree**:
-```bash
+```sh
 lsusb -t
 ```
 
 **Check USB device details**:
-```bash
+```sh
 lsusb -v -d 0781:5583
 ```
 
 **List block devices**:
-```bash
+```sh
 lsblk
 ```
 
 **Add USB to VM**:
-```bash
+```sh
 qm set 100 -usb0 host=0781:5583,usb3=1
 ```
 
 **Remove USB from VM**:
-```bash
+```sh
 qm set 100 --delete usb0
 ```
 
 **Set boot order**:
-```bash
+```sh
 qm set 100 -boot order=usb0;scsi0
 ```
 
 **Monitor USB events**:
-```bash
+```sh
 dmesg -w | grep -i usb
 ```
 
 **Check VM configuration**:
-```bash
+```sh
 cat /etc/pve/qemu-server/100.conf
 ```
 
