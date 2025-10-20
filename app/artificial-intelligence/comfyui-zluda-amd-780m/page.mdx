@@ -1,0 +1,398 @@
+---
+title: ComfyUI with ZLUDA for AMD 780M
+---
+
+import { Callout } from 'nextra/components'
+
+# ComfyUI with ZLUDA for AMD Radeon 780M
+
+<Callout type="info">
+  Affiliate links in this guide help support this documentation at no extra cost to you.
+</Callout>
+
+This guide was created for the AMD Radeon 780M integrated graphics using Windows. For a guide on the AMD Radeon 680M see the [ComfyUI with ZLUDA for AMD 680M](/artificial-intelligence/comfyui-zluda-amd-680m) doc. The mini-pc used in this example is the [GMKTec K12 with a 780M](https://amzn.to/42MfMVE), which has the Ryzen 7 H 255 CPU, 32GB of DDR5 5600, and a 512GB SSD. This is now my primary Windows PC and it has been fantastic. One major benefit is the Oculink port which allows for an external GPU if you ever want to upgrade from the 780M.
+
+## Overview
+
+ZLUDA (CUDA on AMD) is a compatibility layer that allows CUDA applications to run on AMD GPUs. This guide will walk you through installing and configuring the [ComfyUI ZLUDA](https://github.com/patientx/ComfyUI-Zluda) specifically optimized for AMD hardware, including the AMD Radeon 780M integrated graphics.
+
+**What you'll need:**
+- A system with AMD Radeon 780M integrated graphics
+- Windows 10/11 (ZLUDA currently works on Windows)
+- At least 16GB of system RAM (more is better for larger models)
+- ~20GB of free storage space for ComfyUI and initial models
+
+The following are some required guidelines to keep in mind from the start.
+
+<Callout type="warning">
+  **CRITICAL SETUP REQUIREMENTS**
+
+  These steps are **mandatory** for ZLUDA to work properly:
+
+  1. **Use Command Prompt, NOT PowerShell** - PowerShell will cause issues
+  2. **Clone to drive root** (e.g., `C:\ComfyUI-Zluda`) - Do not use nested directories
+  3. **Use Python 3.11.9 specifically** - Other versions will cause issues
+  4. **Exclude directory from Windows Defender** - ([see why](https://github.com/patientx/ComfyUI-Zluda?tab=readme-ov-file))
+  5. **Carefully copy all required libraries and add ons** - Missing dependencies will cause failures
+</Callout>
+
+Not following the above will result in a painful experience. Trust me.
+
+## Install Latest Adrenaline Drivers
+I recommending going to AMD's [Drivers and Support for Processors and Graphics](https://www.amd.com/en/support/download/drivers.html) and downloading the latest drivers for your AMD GPU if you have not done this already. You need at least version 25.5.1.
+
+![amd-drivers](/photos/artificial-intelligence/comfyui-zluda-amd-780m/amd-drivers.png)
+
+Once the download is complete, install the drivers.
+
+![780m-drivers](/photos/artificial-intelligence/comfyui-zluda-amd-780m/780m-drivers.png)
+
+When complete, leave the "Keep AMD software up to date" if you want to enable auto updates and then click "Close".
+
+![complete-driver](/photos/artificial-intelligence/comfyui-zluda-amd-780m/complete-driver.png)
+
+## Install HIP 6.4.2 Drivers
+The next step is to install the HIP drivers. For the 780M version 6.4.2 will be installed. Be sure not to mix this up with the 6.2.4 as they look similar. Navigate to the [AMD HIP SDK](https://www.amd.com/en/developer/resources/rocm-hub/hip-sdk.html) page and download the specified version.
+
+![download-hip](/photos/artificial-intelligence/comfyui-zluda-amd-780m/download-hip.png)
+
+You will need to accept the terms before downloading.
+
+![accept-terms](/photos/artificial-intelligence/comfyui-zluda-amd-780m/accept-terms.png)
+
+Once complete start the installation. When prompted to allow the app to make changes, select "Yes"
+
+![allow](/photos/artificial-intelligence/comfyui-zluda-amd-780m/allow.png)
+
+The installer will begin and it will be similar to installing the drivers. Leave all the defaults selected
+
+![confirm-install-hip](/photos/artificial-intelligence/comfyui-zluda-amd-780m/confirm-install-hip.png)
+
+When completed, click "Finish"
+
+![hip-finish](/photos/artificial-intelligence/comfyui-zluda-amd-780m/hip-finish.png)
+
+If the AMD Adrenaline UI pops up you can close it. 
+
+## Validate and set HIP PATHs
+There are three environmental variables you must make sure exist. Two of them are likely already set. In your Windows search bar, type "System" and look for the menu item for "Edit the system environmental variables".
+
+![system](/photos/artificial-intelligence/comfyui-zluda-amd-780m/system.png)
+
+A window will pop up, select "Environment Variables" at the bottom.
+
+![environment-variables](/photos/artificial-intelligence/comfyui-zluda-amd-780m/environment-variables.png)
+
+In the bottom section, confirm both HIP_PATH and HIP_PATH_64 exist. They should both point to `C:\Program Files\AMD\ROCm\6.4\`
+
+![hip-path-64](/photos/artificial-intelligence/comfyui-zluda-amd-780m/hip-path-64.png)
+
+Now in the top section, select the "Variable" named "Path" and then click the "Edit" button.
+
+![edit-path](/photos/artificial-intelligence/comfyui-zluda-amd-780m/edit-path.png)
+
+Then click "New" 
+
+![new-value](/photos/artificial-intelligence/comfyui-zluda-amd-780m/new-value.png)
+
+Paste in the below value, and click "OK"
+
+```
+C:\Program Files\AMD\ROCm\6.4\bin`
+```
+
+![pasted](/photos/artificial-intelligence/comfyui-zluda-amd-780m/pasted.png)
+
+Now click "OK" on the main "Environment Variables" to close it.
+
+![ev-ok](/photos/artificial-intelligence/comfyui-zluda-amd-780m/ev-ok.png)
+
+And then click "OK" on the "System Properties" window to close it as well.
+
+![sp-ok](/photos/artificial-intelligence/comfyui-zluda-amd-780m/sp-ok.png)
+
+## Replace ROCm Library Files
+
+The next step is to replace the default ROCm Library Files along with the rocblas.dll file. Navigate to the [likelovewant - ROCmLibs-for-gfx1103-AMD780M-APU](https://github.com/likelovewant/ROCmLibs-for-gfx1103-AMD780M-APU/releases/tag/v0.6.4.2) repo and scroll down to the "Assets" section. Then download the "rocm.gfx1103.for.hip.6.4.2.7z" file.
+
+![gfx1103](/photos/artificial-intelligence/comfyui-zluda-amd-780m/gfx1103.png)
+
+Open up the "Downloads" folder and extract the archive.
+
+![extract-all](/photos/artificial-intelligence/comfyui-zluda-amd-780m/extract-all.png)
+
+Leave the defaults and click "Extract"
+
+![extract](/photos/artificial-intelligence/comfyui-zluda-amd-780m/extract.png)
+
+When complete, open the directory to find the "Library" folder and the "rocblas.dll". 
+
+![extracted-files](/photos/artificial-intelligence/comfyui-zluda-amd-780m/extracted-files.png)
+
+Leaving that window open, create a new tab in file explorer 
+
+![new-tab](/photos/artificial-intelligence/comfyui-zluda-amd-780m/new-tab.png)
+
+Then navigate to `C:\Program Files\AMD\ROCm\6.4\bin\rocblas`. Once there, rename the existing `library` directory to `library-backup`.
+
+![library-backup](/photos/artificial-intelligence/comfyui-zluda-amd-780m/library-backup.png)
+
+Now go back to the "rocm gfx1103 for hip 6.4.2" tab and copy the "library" folder and paste it into the rocblas folder. When prompted, select "Continue" to make the transfer.
+
+![continue](/photos/artificial-intelligence/comfyui-zluda-amd-780m/continue.png)
+
+When the transfer is complete you will have both the new "library" folder you copied over from the extracted archive, and the original folder that was renamed to "library-backup". 
+
+![library-folders](/photos/artificial-intelligence/comfyui-zluda-amd-780m/library-folders.png)
+
+Now, navigate from the `C:\Program Files\AMD\ROCm\6.4\bin\rocblas` folder up one directory to the `C:\Program Files\AMD\ROCm\6.4\bin` folder, and copy over the `rocblas.dll` file. You will be prompted to overwrite the existing file which you should do.
+
+![replace](/photos/artificial-intelligence/comfyui-zluda-amd-780m/replace.png)
+
+Like before, you will also be prompted to "Continue" as this is a protected folder. Press Continue.
+
+![continue-bin](/photos/artificial-intelligence/comfyui-zluda-amd-780m/continue-bin.png)
+
+That concludes the changes needed for the HIP SDK.
+
+## Install Python 3.11.9
+
+<Callout type="warning">
+You must use Python version 3.11.9 even if you already have Python installed.
+</Callout>
+
+Navigate to the [Python download page for 3.11.9](https://www.python.org/downloads/release/python-3119/). Then scroll down to the "Files" section and grab the one labeled "Windows installer (64-bit)".
+
+![python-installer](/photos/artificial-intelligence/comfyui-zluda-amd-780m/python-installer.png)
+
+Run the installer and choose "Customize installation".
+
+![custom-installation](/photos/artificial-intelligence/comfyui-zluda-amd-780m/custom-installation.png)
+
+Leave all the Optional Featuers selected and click "Next"
+
+![python-optional](/photos/artificial-intelligence/comfyui-zluda-amd-780m/python-optional.png)
+
+Ensure the following options are selected for "Advanced Options"
+1. Associate files with Python (requires the 'py' launcher)
+1. Create shortcuts for installed applications
+1. Add Python to environment variables
+
+Then click "Install"
+
+![python-advanced](/photos/artificial-intelligence/comfyui-zluda-amd-780m/python-advanced.png)
+
+When prompted to all this app to make changes, select "Yes".
+
+![python-changes](/photos/artificial-intelligence/comfyui-zluda-amd-780m/python-changes.png)
+
+Let the installer complete, then select "Disable path length limit".
+
+![python-disable](/photos/artificial-intelligence/comfyui-zluda-amd-780m/python-disable.png)
+
+And once again allow the app to make changes by selecting "Yes" to the pop-up. Then click "Close" to finish the Python installation.
+
+![python-close](/photos/artificial-intelligence/comfyui-zluda-amd-780m/python-close.png)
+
+## Install Git
+
+In order to clone the repo, you must have git installed. Navigate to the [git-scm](https://git-scm.com/downloads/win) Windows download page, and click the "Click here to download" link.
+
+![git-download](/photos/artificial-intelligence/comfyui-zluda-amd-780m/git-download.png)
+
+Once the download completes, start the installation. As usual, click "Yes" when prompted to allow the app to make changes.
+
+![git-allow](/photos/artificial-intelligence/comfyui-zluda-amd-780m/git-allow.png)
+
+Then click "Next" to start.
+
+![git-next](/photos/artificial-intelligence/comfyui-zluda-amd-780m/git-next.png)
+
+"Next" again.
+
+![git-destination](/photos/artificial-intelligence/comfyui-zluda-amd-780m/git-destination.png)
+
+Leave the default selected components and click "Next".
+
+![git-components](/photos/artificial-intelligence/comfyui-zluda-amd-780m/git-components.png)
+
+Click "Next" again.
+
+![git-start](/photos/artificial-intelligence/comfyui-zluda-amd-780m/git-start.png)
+
+Click "Next" for the editor.
+
+![git-vim](/photos/artificial-intelligence/comfyui-zluda-amd-780m/git-vim.png)
+
+Continue to accept the defaults (there will be several more) and then click "Install".
+
+![git-install](/photos/artificial-intelligence/comfyui-zluda-amd-780m/git-install.png)
+
+When the install completes, click "Finish" (I uncheck "View Release Notes" as it is not needed).
+
+![git-finish](/photos/artificial-intelligence/comfyui-zluda-amd-780m/git-finish.png)
+
+## Install Visual Studio Build Tools
+
+Next, click this to download [Visual Studio Build Tools](https://aka.ms/vs/17/release/vs_BuildTools.exe). Then start the installer and once again click "Yes" to allow the app to make changes.
+
+![tools-allow](/photos/artificial-intelligence/comfyui-zluda-amd-780m/tools-allow.png)
+
+When prompted, click "Continue".
+
+![tools-continue](/photos/artificial-intelligence/comfyui-zluda-amd-780m/tools-continue.png)
+
+There will be a few progress bars which complete, and then the installer will open. Simply click the "Install" button with the default selections.
+
+![tools-install](/photos/artificial-intelligence/comfyui-zluda-amd-780m/tools-install.png)
+
+Wait for the download and install to complete, it should not take more than a minute or so. Then simply close out of the installer. 
+
+![tools-close](/photos/artificial-intelligence/comfyui-zluda-amd-780m/tools-close.png)
+
+<Callout type="warning">
+At this point you must restart your PC
+</Callout>
+
+## Installing ComfyUI Zluda
+
+<Callout type="warning">
+* It is HIGHLY recommended you clone the repo to `C:\`
+* You should be using the CMD Prompt and not Powershell for this
+</Callout>
+
+Open up the Command Prompt by typing "cmd" in the Windows search and then selecting the "Command Prompt".
+
+![cmd-open](/photos/artificial-intelligence/comfyui-zluda-amd-780m/cmd-open.png)
+
+Then navigate to the root of the C:\ drive by pasting in:
+
+```
+cd C:\
+```
+
+Then clone the git repo with:
+
+```
+git clone https://github.com/patientx/ComfyUI-Zluda
+```
+
+![git-clone](/photos/artificial-intelligence/comfyui-zluda-amd-780m/git-clone.png)
+
+Leave the CMD Prompt open and move to the next section.
+
+## Whitelist the ComfyUI-Zluda Folder
+
+<Callout type="warning">
+You must whitelist the directory or Windows Security will quaruntine essential files during installation.
+</Callout>
+
+Open up Windows Security by typing "security" in the Windows search.
+
+![security-open](/photos/artificial-intelligence/comfyui-zluda-amd-780m/security-open.png)
+
+On the left panel, click "Virus & threat protection"
+
+![security-virus](/photos/artificial-intelligence/comfyui-zluda-amd-780m/security-virus.png)
+
+Find the "Virus & threat protection settings" section and click "Manage Settings"
+
+![security-manage](/photos/artificial-intelligence/comfyui-zluda-amd-780m/security-manage.png)
+
+Scroll to the bottom and find "Exclusions", then click "Add or remove exclusions"
+
+![security-exclusions](/photos/artificial-intelligence/comfyui-zluda-amd-780m/security-exclusions.png)
+
+When prompted to all this app to make changes, click "Yes"
+
+![security-changes](/photos/artificial-intelligence/comfyui-zluda-amd-780m/security-changes.png)
+
+Then click "Add an exclusion" then "Folder"
+
+![security-add](/photos/artificial-intelligence/comfyui-zluda-amd-780m/security-add.png)
+
+Then select the folder `C:\ComfyUI-Zluda` and then click "Select Folder"
+
+![security-select-folder](/photos/artificial-intelligence/comfyui-zluda-amd-780m/security-select-folder.png)
+
+You should now see it listed. You can close Windows Security now.
+
+![security-excluded](/photos/artificial-intelligence/comfyui-zluda-amd-780m/security-excluded.png)
+
+## Install ComfyUI Zluda
+
+Back in the CMD Prompt, enter the ComfyUI-Zluda folder with:
+
+```
+cd ComfyUI-Zluda
+```
+
+Then run the installer
+
+```
+install-n.bat
+```
+
+The installation should begin. This can take some time so please be patient. After installation, it will automatically open ComfyUI in the browser.
+
+![comfy-install](/photos/artificial-intelligence/comfyui-zluda-amd-780m/comfy-install.png)
+
+## First Use
+
+Once the install finishes you will see the browser open to ComfyUI with the "Templates" section open. 
+
+<Callout type="warning">
+The CMD Prompt must remain open while using ComfyUI
+</Callout>
+
+![comfy-templates](/photos/artificial-intelligence/comfyui-zluda-amd-780m/comfy-templates.png)
+
+Select the "NetaYume Lumina Text to Image" template. Then download the template.
+
+![comfy-download](/photos/artificial-intelligence/comfyui-zluda-amd-780m/comfy-download.png)
+
+The model will download to your Downloads directory, open that directory up and the transfer the model to the `C:\ComfyUI-Zluda\models\checkpoints` folder.
+
+![comfy-checkpoints](/photos/artificial-intelligence/comfyui-zluda-amd-780m/comfy-checkpoints.png)
+
+However, a new node needs to be created for the workflow to run, and you will likely need to use this in all of your workflows. Right click on the open space in the workflow pane, and then select Add Node > CFZ > utils > CFZ CUDNN Toggle.
+
+![comfy-toggle](/photos/artificial-intelligence/comfyui-zluda-amd-780m/comfy-toggle.png)
+
+Then identify the "VAE Decode" node and on the left side "samples" input, move the pink line to the CFZ CUDNN Toggle "latent" input. Then from the CFZ CUDNN Toggle "latent" output, move it to the "samples" input on the VAE Decode Node. Finally, set the "enable_cudnn" to false on the CFZ CUDNN Toggle.
+
+It should look something like this:
+
+![comfy-path](/photos/artificial-intelligence/comfyui-zluda-amd-780m/comfy-path.png)
+
+You should now be able to click the "Run" button and have the image generated. Then you can click the "Queue" button to see the generated images.
+
+![comfy-run](/photos/artificial-intelligence/comfyui-zluda-amd-780m/comfy-run.png)
+
+<Callout type="warning">
+On a 780M, the first time an image is generated with this model it will take 10-15 minutes. Every time after it will be MUCH faster (~110-120 seconds).
+</Callout>
+
+You can always check the CMD Prompt for errors. You will likely see "Compliation is in progress. Please wait..." for some time as the model compiles during the first run.
+
+![comfy-loading](/photos/artificial-intelligence/comfyui-zluda-amd-780m/comfy-loading.png)
+
+Once the Compilation completes you will be gin to see the progress bar for the image generation as it completes each step.
+
+![comfy-loading](/photos/artificial-intelligence/comfyui-zluda-amd-780m/comfy-steps.png)
+
+Eventually the image show both in the workflow and in the "Queue". 
+
+![completed-generation](/photos/artificial-intelligence/comfyui-zluda-amd-780m/completed-generation.png)
+
+## Final Notes
+I am not sure on the specifics, but it seems that each new model "type" will require a one-time compilation that can take up to 15 minutes. 
+
+> The first generation will take longer than usual, ZLUDA is compiling for your GPU. It does this once for every new model type. This is necessary and unavoidable
+
+You must keep the CMD prompt open while using ComfyUI. Once you are finished you can close the CMD prompt. To start it again, open up the CMD prompt and run `C:\ComfyUI-Zluda\comfyui-n.bat`.
+
+You can make a shortcut to this on your desktop which is a bit easier. 
+
+Each time you run `comfyui-n.bat` the latest updates from the github repo will be pulled, so there is usually no need to update anything. 
+
