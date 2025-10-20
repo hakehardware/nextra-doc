@@ -370,7 +370,7 @@ You should now be able to click the "Run" button and have the image generated. T
 ![comfy-run](/photos/artificial-intelligence/comfyui-zluda-amd-780m/comfy-run.png)
 
 <Callout type="warning">
-On a 780M, the first time an image is generated with this model it will take 10-15 minutes. Every time after it will be MUCH faster (~110-120 seconds).
+On a 780M, the first time an image is generated with this model it will take 15-20 minutes. Every time after it will be MUCH faster (~300 seconds).
 </Callout>
 
 You can always check the CMD Prompt for errors. You will likely see "Compliation is in progress. Please wait..." for some time as the model compiles during the first run.
@@ -395,4 +395,6 @@ You must keep the CMD prompt open while using ComfyUI. Once you are finished you
 You can make a shortcut to this on your desktop which is a bit easier. 
 
 Each time you run `comfyui-n.bat` the latest updates from the github repo will be pulled, so there is usually no need to update anything. 
+
+Make sure to continue to add the CFZ CUDNN Toggle to your workflows as you will likely receive an error otherwise. 
 
