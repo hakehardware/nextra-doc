@@ -2,25 +2,19 @@
 title: ComfyUI with ZLUDA for AMD 680M
 ---
 
-# ComfyUI with ZLUDA for AMD Radeon 680M
-
-<Callout type="warning">
-This guide is currently under construction.
-</Callout>
-
 import { Callout } from 'nextra/components'
+
+# ComfyUI with ZLUDA for AMD Radeon 680M
 
 <Callout type="info">
   Affiliate links in this guide help support this documentation at no extra cost to you.
 </Callout>
 
-This guide was created for the AMD Radeon 680M integrated graphics using Windows. It can be likely be adapted for other AMD GPUs.
-
-The mini-pc used in this example is the [GMKTec M7 with a 680M](https://amzn.to/4hfiFUN).
+This guide was created for the AMD Radeon 680M integrated graphics using Windows. If you have an AMD Radeon 780M see the [ComfyUI with ZLUDA for AMD 780M](/artificial-intelligence/comfyui-zluda-amd-780m). The mini-pc used in this example is the [GMKTec M7 with a 680M](https://amzn.to/4hfiFUN), which has the AMD Ryzen 7 PRO 6850H, 32GB of DDR5 4800, and a 512GB SSD.
 
 ## Overview
 
-ZLUDA (CUDA on AMD) is a compatibility layer that allows CUDA applications to run on AMD GPUs. This guide will walk you through installing and configuring the ComfyUI ZLUDA specifically optimized for AMD hardware, including the AMD Radeon 680M integrated graphics.
+ZLUDA (CUDA on AMD) is a compatibility layer that allows CUDA applications to run on AMD GPUs. This guide will walk you through installing and configuring the [ComfyUI ZLUDA](https://github.com/patientx/ComfyUI-Zluda) specifically optimized for AMD hardware, including the AMD Radeon 680M integrated graphics.
 
 **What you'll need:**
 - A system with AMD Radeon 680M integrated graphics (or similar AMD GPU)
@@ -43,6 +37,19 @@ The following are some required guidelines to keep in mind from the start.
 </Callout>
 
 Not following the above will result in a painful experience. Trust me.
+
+## Install Latest Adrenaline Drivers
+I recommending going to AMD's [Drivers and Support for Processors and Graphics](https://www.amd.com/en/support/download/drivers.html) and downloading the latest drivers for your AMD GPU if you have not done this already. You need at least version 25.5.1.
+
+
+
+
+
+
+
+
+
+
 
 ## 1. Required Software
 
