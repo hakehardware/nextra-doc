@@ -1,0 +1,314 @@
+---
+title: Ollama for AMD Integrated GPUs in Windows
+---
+
+import { Callout } from 'nextra/components'
+
+# Ollama for AMD Integrated GPUs in Windows
+
+Affiliate links in this guide help support this documentation at no extra cost to you.
+
+<Callout type="info">
+The exact Mini-PC used in this guide is a [GMKTec M7 with an AMD Ryzen 7 PRO 6850H with a Radeon 680M](https://amzn.to/43yfgKZ). The guide should work with other integrated GPUs such as the 780M and 890M with slightly modifications.
+</Callout>
+
+## Overview
+If you try and run Ollama with an integrated GPU most likely it will run on the CPU only. It seems some AMD GPUs are supported, but many are not. If you are having issues getting your AMD GPU to work with Ollama you can build a custom version with the latest HIP SDK to enable GPU with Ollama.
+
+**What you'll need:**
+- A system with AMD Radeon graphics
+- Windows 10/11 (Linux it appears has a much easier time)
+- At least 16GB of system RAM (more is better for larger models)
+- ~20GB of free storage space for Ollama and models
+
+The following are some required guidelines to keep in mind from the start.
+
+<Callout type="warning">
+  **CRITICAL SETUP REQUIREMENTS**
+
+  This guide will result in a custom Ollama build.
+
+  1. **DO NOT update Ollama if prompted** You must rebuild for the latest updates.
+  2. **Install all the necessary tools** The commands will fail without them.
+  3. **Follow each step closely** You must perform each step exactly, including editing JSON and TXT files
+
+</Callout>
+
+Not following the above will result in a painful experience. Trust me.
+
+## Install Go
+Navigate to the [Go download page](https://go.dev/dl/) and download the latest version of Go.
+
+![go-download](/photos/artificial-intelligence/ollama-for-amd-windows/go-download.png)
+
+Once the installer loads, click "Next" to begin. Then click "Next" to accept the EULA. Accept the defaults and then allow the app to make changes.
+
+![go-warning](/photos/artificial-intelligence/ollama-for-amd-windows/go-warning.png)
+
+The installer will complete and then close. No further action is needed.
+
+## Install MinGW
+
+Navigate to the [MinGW releases page](https://github.com/niXman/mingw-builds-binaries/releases). Select the one similar to ` x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0.7z `.
+
+![ming-download](/photos/artificial-intelligence/ollama-for-amd-windows/ming-download.png)
+
+Now open up the downloads folder and extract the archive. 
+
+![ming-download](/photos/artificial-intelligence/ollama-for-amd-windows/ming-extract.png)
+
+Update the extract folder to `C:\`. Then click "Extract". It can take some time to extract.
+
+![ming-download](/photos/artificial-intelligence/ollama-for-amd-windows/ming-d-extract.png)
+
+Add `C:\mingw64\bin` to your path by searching for "system" in the Windows search bar and selecting the "Edit the system environment variables" item.
+
+![ming-path](/photos/artificial-intelligence/ollama-for-amd-windows/ming-path.png)
+
+Then click the "Environment Variables..." button.
+
+![ming-env-open](/photos/artificial-intelligence/ollama-for-amd-windows/ming-env-open.png)
+
+Then select the "Path" Variable in the top section, and then click the "Edit" button.
+
+![ming-path-edit](/photos/artificial-intelligence/ollama-for-amd-windows/ming-path-edit.png)
+
+Then click "New" and paste in:
+
+```
+C:\mingw64\bin
+```
+
+And click "OK" to save.
+
+![ming-path-new](/photos/artificial-intelligence/ollama-for-amd-windows/ming-path-new.png)
+
+Now click "OK" to close the Environment Variable windows that were just opened. MinGW is now ready.
+
+## Install Adrenaline Drivers
+
+<Callout type="info">
+This step can be skipped if you already have the latest drivers
+</Callout>
+
+Navigate to the Adrenaline Drivers download page and click "Download Windows Drivers"
+
+![drivers-download](/photos/artificial-intelligence/ollama-for-amd-windows/drivers-download.png)
+
+Run the installer and allow the app to make changes
+
+![drivers-allow](/photos/artificial-intelligence/ollama-for-amd-windows/drivers-allow.png)
+
+Accept the defaults and proceed
+
+![drivers-express](/photos/artificial-intelligence/ollama-for-amd-windows/drivers-express.png)
+
+Let the installer complete, click "Close", and then proceed to the next step.
+
+![drivers-close](/photos/artificial-intelligence/ollama-for-amd-windows/drivers-close.png)
+
+## Install Git
+Navigate to the [git-scm download page](https://git-scm.com/install/windows) and click "Click here to download".
+
+![git-download](/photos/artificial-intelligence/ollama-for-amd-windows/git-download.png)
+
+As usual, select "Yes" to allow the app to make changes. Then leave all the defaults and click "Next" through the entire installation and then click "Finish".
+
+## Install HIP 6.4.2 SDK
+
+Navigate to the [HIP SDK download page](https://www.amd.com/en/developer/resources/rocm-hub/hip-sdk.html) and download the 6.4.2 ROCm Version.
+
+![hip-download](/photos/artificial-intelligence/ollama-for-amd-windows/hip-download.png)
+
+Accept the terms.
+
+![hip-accept](/photos/artificial-intelligence/ollama-for-amd-windows/hip-accept.png)
+
+Start the install and allow the app to make changes to the device. Then keep the defaults and proceed.
+
+![hip-download](/photos/artificial-intelligence/ollama-for-amd-windows/hip-download.png)
+
+## Validate and set HIP PATHs
+
+Search for "system" again in the Windows search bar to edit the enviroment variables. Then confirm the two HIP variables are present.
+
+![hip-vars](/photos/artificial-intelligence/ollama-for-amd-windows/hip-vars.png)
+
+Now add HIP to the PATH similar to with MinGW.
+
+```
+C:\Program Files\AMD\ROCm\6.4\bin
+```
+
+![hip-env](/photos/artificial-intelligence/ollama-for-amd-windows/hip-env.png)
+
+
+
+## Replace ROCm Library Files
+
+<Callout type="info">
+This only needs to be done if your GPU is considered "unsupported" such as 680M and 780M. The 890M should work without this step, proceed to "Install Build Tools"
+</Callout>
+
+Navigate to the [ROCmLib repo](https://github.com/likelovewant/ROCmLibs-for-gfx1103-AMD780M-APU/releases/tag/v0.6.4.2) and download libs for your gfx code. If you are not sure, check out the [AMD-GPU-Codenames wiki](https://github.com/likelovewant/ollama-for-amd/wiki/AMD-GPU-Codenames).
+
+For the 680M I will get the gfx1035.
+![libs-download](/photos/artificial-intelligence/ollama-for-amd-windows/libs-download.png)
+
+Extract the files and open the folder. There should be a `library` folder and `rocblas.dll`. 
+
+![libs-extract](/photos/artificial-intelligence/ollama-for-amd-windows/libs-extract.png)
+
+Open `C:\Program Files\AMD\ROCm\6.4\bin\rocblas` and rename the existing `library` folder to `library-backup`. 
+
+Click "continue" to proceed.
+
+![libs-admin](/photos/artificial-intelligence/ollama-for-amd-windows/libs-admin.png)
+
+Once the folder is renamed, copy over the new `library` folder.
+
+![libs-copy](/photos/artificial-intelligence/ollama-for-amd-windows/libs-copy.png)
+
+Now navigate up one folder to `C:\Program Files\AMD\ROCm\6.4\bin` and paste in the `rocblas.dll` file, when prompted, replace the existing file.
+
+![libs-dll](/photos/artificial-intelligence/ollama-for-amd-windows/libs-dll.png)
+
+## Install Build Tools
+TODO: Need to update for Build Tools
+Navigate to the [build tools download page](https://visualstudio.microsoft.com/visual-cpp-build-tools/) and click "Download Build Tools". 
+
+![vsc-download](/photos/artificial-intelligence/ollama-for-amd-windows/bt-download.png)
+
+Run the installer, and allow the app to make changes to the device. Then click "Continue" to start. On the install screen, scroll down to "Desktops & Mobile", and then select the "Desktop development with c++" (NOTE: The below image was taken after I completed the installation. The lower red box will say "Install" instead of "Close")
+
+![vsc-install](/photos/artificial-intelligence/ollama-for-amd-windows/bt-install.png)
+
+Let the install complete (can take some time).
+
+<Callout type="warning">
+It is highly recommended to restart Windows before proceeding.
+</Callout>
+
+## Install CMake
+Navigate to the CMake download page and find the Windows binary.
+
+![cmake-download](/photos/artificial-intelligence/ollama-for-amd-windows/cmake-download.png)
+
+Leave the defaults and complete the installation.
+
+## Install Inno
+Navigate to the [Downloads Page](https://jrsoftware.org/isdl.php)
+
+Install with defaults.
+
+## Prepare the Ollama Repo
+The next step is to clone the Ollama repo to `C:\`. Open up powershell and navigate to `C:\`
+
+```
+cd C:\
+```
+
+Then clone the repo:
+
+```
+git clone https://github.com/ollama/ollama.git
+```
+
+![ollama-clone](/photos/artificial-intelligence/ollama-for-amd-windows/ollama-clone.png)
+
+Next, update the `FILTER AMDGPU_TARGETS` to reflect your GPU. Open up "Notepad" and then open the `CMakeLists.txt` file.
+
+![notepad-open](/photos/artificial-intelligence/ollama-for-amd-windows/notepad-open.png)
+
+Identify the section which has `FILTER AMDGPU_TARGETS INCLUDE REGEX`
+
+<Callout type="warning">
+Make sure to update the "INCLUDE" one and not the "EXCLUDE".
+</Callout>
+
+![notepad-filter](/photos/artificial-intelligence/ollama-for-amd-windows/notepad-filter.png)
+
+Then update it with
+```
+list(FILTER AMDGPU_TARGETS INCLUDE REGEX "^gfx(803|900(:xnack-)|902|90c(:xnack-)|1010(:xnack-)|1011|1012(:xnack-)|103[0-6]|110[0-3]|1150)$")
+```
+
+![notepad-filter-new](/photos/artificial-intelligence/ollama-for-amd-windows/notepad-filter-new.png)
+
+Then save the changes. Using Notepad, select the option for "all files", then open the CMakePresets.json file. 
+
+![notepad-open-json](/photos/artificial-intelligence/ollama-for-amd-windows/notepad-open-json.png)
+
+Find the `AMDGPU_TARGETS` section.
+
+![notepad-json-old](/photos/artificial-intelligence/ollama-for-amd-windows/notepad-json-old.png)
+
+Update it with your specific GPU type from before (multiple can be added if you want to build for multiple GPUs).
+
+![notepad-json-new](/photos/artificial-intelligence/ollama-for-amd-windows/notepad-json-new.png)
+
+Save the JSON file and then close Notepad.
+
+## Create the Installer
+
+Open powershell then run the build script to create the installer.
+
+```
+powershell -ExecutionPolicy Bypass -File .\scripts\build_windows.ps1
+```
+
+The result will be an installer in the `/dist` folder
+
+![build](/photos/artificial-intelligence/ollama-for-amd-windows/build.png)
+
+## Install Ollama
+
+Navigate to the `/dist` folder:
+ 
+ ```
+ cd C:\ollama\dist
+ ``` 
+ 
+ folder and then run the installer.
+
+```
+OllamaInstaller.exe
+```
+
+This will begin the installation process.
+
+<Callout type="warning">
+After installing and starting, there will be a persistent notice to update. If you update it will break the ROCm support.
+</Callout>
+
+## Verity and Setup Ollama
+Ollama should now be running in the background, however I recommend closing it and manually starting by opening up a powershell terminal and running 
+```
+ollama serve
+```
+
+Then download a model to test
+
+```
+ollama pull llama3.2:1b
+```
+
+By default the full model does not get offloaded to the GPU. To offload the full model you can use a ModelFile.
+
+This sets the num_gpu to 99 ensuring the GPU is fully utilized.
+```
+@"
+FROM llama3.2:1b
+PARAMETER num_gpu 99
+"@ | Out-File -FilePath Modelfile -Encoding utf8
+```
+
+Then create the Modelfile
+```
+ollama create llama3.2-gpu -f Modelfile
+```
+
+Now to launch the model using the Modelfile run:
+```
+ollama run llama3.2-gpu
+```
