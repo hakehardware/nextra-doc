@@ -1,0 +1,78 @@
+---
+title: ComfyUI System Monitor
+---
+
+import { Callout } from 'nextra/components'
+
+# ComfyUI System Monitor
+
+![comfyui](/photos/artificial-intelligence/comfyui-install-system-monitor/toolbar.png)
+
+Check out the github repo: [ComfyUI-Crystools](https://github.com/crystian/ComfyUI-Crystools)
+
+ComfyUI-Crystools - Brief Overview
+Crystools is a "Swiss Army knife" toolkit that adds monitoring, debugging, and workflow organization tools to ComfyUI.
+Main Features:
+
+1. Real-Time Resource Monitor - See CPU, GPU, RAM, VRAM, GPU temp, and disk space usage right in the menu bar
+1. Progress Bar - Visual progress indicator showing workflow completion and time elapsed
+1. Metadata Tools - Extract, view, and compare image metadata (prompts, workflows, settings)
+1. Debug Nodes - Display/console output to inspect any value in your workflow
+1. Pipe Nodes - Bundle multiple connections into single "pipes" to clean up messy workflows
+1. Enhanced Load/Save - Load images with subfolder support, save with custom metadata
+1. Switch Nodes - Toggle between different workflow paths with boolean switches
+1. Comparison Tools - Compare two images' metadata or JSONs side-by-side
+
+## Prerequisites
+1. ComfyUI
+1. ComfyUI Manager (optional)
+
+## Option 1 - Install w/ ComfyUI Manager
+Once you have ComfyUI Manager installed you can install lots of custom nodes from the manager. 
+
+Open up the Manager
+![open-manager](/photos/artificial-intelligence/comfyui-install-system-monitor/open-manager.png)
+
+Select "Custom Nodes Manager"
+![custom-nodes](/photos/artificial-intelligence/comfyui-install-system-monitor/custom-nodes.png)
+
+Search for "Crystools" then click "Install"
+![install](/photos/artificial-intelligence/comfyui-install-system-monitor/install.png)
+
+You will need to restart ComfyUI, either select the option to restart in Comfy Manager or move to your terminal and press CTRL+C to stop the server, then start it again.
+
+
+## Option 2 - Install w/ Git
+Stop ComfyUI if running.
+
+Navigate to the custom_nodes folder
+
+```
+cd ~/ComfyUI/custom_nodes
+```
+
+Then clone the repo
+```
+git clone https://github.com/crystian/comfyui-crystools.git
+```
+
+Move into the directory
+```
+cd comfyui-crystools
+```
+
+Enter virtual environment
+```
+source ~/ComfyUI/venv/bin/activate
+```
+
+Install requirements
+```
+pip install -r requirements.txt
+```
+
+## Start ComfyUI
+Now start ComfyUI and you should see the system monitor. 
+```
+python main.py --listen 0.0.0.0
+```

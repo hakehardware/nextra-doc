@@ -1,0 +1,45 @@
+---
+title: Install ComfyUI Manager
+---
+
+import { Callout } from 'nextra/components'
+
+# Install ComfyUI Manager
+
+![comfyui](/photos/artificial-intelligence/comfyui-install-comfy-manager/manager.png)
+
+ComfyUI Manager is the "app store" for ComfyUI. It's a custom node that lets you manage everything through the web interface instead of using command line.
+Main Features:
+
+1. Install Custom Nodes - Browse and install extensions/plugins with one click
+1. Install Models - Download models (checkpoints, LoRAs, ControlNet, etc.) directly to your server from CivitAI and Hugging Face
+1. Update ComfyUI - Keep ComfyUI up-to-date with one click
+1. Fix Missing Nodes - Automatically detect and install missing nodes when you load workflows
+1. Manage Dependencies - Install Python packages needed by custom nodes
+
+## Prerequisites
+You must have ComfyUI and git installed.
+
+## Clone the Repo
+Stop ComfyUI if it is running.
+
+Navigate to your custom_nodes directory
+```
+cd ~/ComfyUI/custom_nodes
+```
+
+Clone the repo
+```
+git clone https://github.com/ltdrdata/ComfyUI-Manager comfyui-manager
+```
+
+## Run ComfyUI
+Navigate to ComfyUI folder
+```
+cd ~/ComfyUI
+```
+
+The dependencies will be installed once you start ComfyUI.
+```
+python main.py --listen 0.0.0.0
+```
